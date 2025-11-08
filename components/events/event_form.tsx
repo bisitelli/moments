@@ -115,7 +115,6 @@ export default function EventForm({
           </TouchableOpacity>
           <TouchableOpacity
             onPress={handleSave}
-            disabled={!form.title.trim()}
           >
             <Text
               style={[
