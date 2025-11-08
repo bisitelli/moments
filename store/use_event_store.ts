@@ -1,5 +1,9 @@
-import { EventRequestDTO } from "@/domain/dto/event_request_dto";
-import { EventItem } from "@/domain/entities/event_item";
+import { container } from "@/dependency_injection/container";
+import { EventMapper } from "@/domain/infrastructure/mappers/event_mapper";
+import { EventRequestDTO } from "@/domain/model/dto/event_request_dto";
+import { EventResponseDTO } from "@/domain/model/dto/event_response_dto";
+import { EventItem } from "@/domain/model/entities/event_item";
+import { EventRepository } from "@/domain/repository/event_repository";
 import { create } from "zustand";
 
 // This store manages events data and actions 
@@ -13,33 +17,75 @@ interface EventStore {
 
   // Actions
   fetchMyEvents: () => Promise<void>;
-  fetchOtherEvents: () => Promise<void>;
+  fetchOtherEvents: (
+    fetchCallback: (repo: EventRepository) => Promise<EventResponseDTO[]>
+  ) => Promise<void>;
   createEvent: (data: EventRequestDTO) => Promise<void>; 
   deleteMyEvent: (id: string) => Promise<void>;
 }
 
 export const useEventStore = create<EventStore>((set, get) => ({
-    myEvents: [],
-    otherEvents: [],
-    loading: false,
-    error: null,
+  myEvents: [],
+  otherEvents: [],
+  loading: false,
+  error: null,
 
-    fetchMyEvents: async () => {
-        // TODO
-    },
+  /**
+   * Fetch events created by the current user (requires authentication)
+   */
+  fetchMyEvents: async () => {
+    // TODO: Waiting for the backend to implement it
+  },
 
-    fetchOtherEvents: async () => {
-        // TODO
-    },
+  /**
+   * Fetch other users' events (for discovery)
+   */
+  fetchOtherEvents: async (fetchCallback: (repo: EventRepository) => Promise<EventResponseDTO[]>) => {
+  set({ loading: true, error: null });
+  try {
+    const repo = container.eventRepository;
+    const events = await fetchCallback(repo);
+    set({
+        otherEvents: events.map((event) => EventMapper.toEntity(event)), // From DTO to Entity
+        loading: false
+    });
+  } catch (err: any) {
+    set({ error: err.message || "Failed to fetch events", loading: false });
+  }
+},
 
-    createEvent: async (data) => {
-        // TODO
-        console.log("Nuevo evento creado:", data);
-    },
-        
-    deleteMyEvent: async (id) => {
-        // TODO
-    },
+  /**
+   * Create a new event 
+   */
+  createEvent: async (data: EventRequestDTO) => {
+    set({ loading: true, error: null });
+    try {
+      const newEvent = await container.eventRepository.createEvent(data);
+      set({
+        myEvents: [
+            ...get().myEvents,
+            EventMapper.toEntity(newEvent)
+        ],
+        loading: false,
+      });
+    } catch (err: any) {
+      set({ error: err.message || "Failed to create event", loading: false });
+    }
+  },
 
-    // TODO: Additional actions like updateEvent, joinEvent, leaveEvent can be added here
+  /**
+   * Delete an existing event by ID
+   */
+  deleteMyEvent: async (id: string) => {
+    set({ loading: true, error: null });
+    try {
+      await container.eventRepository.deleteEvent(id);
+      set({
+        myEvents: get().myEvents.filter((e) => e.id !== id),
+        loading: false,
+      });
+    } catch (err: any) {
+      set({ error: err.message || "Failed to delete event", loading: false });
+    }
+  },
 }));
