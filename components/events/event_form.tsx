@@ -17,13 +17,14 @@ export interface EventFormData {
 export default function EventForm({
   onClose,
   onFormSubmitted,
-  initialValues
+  initialValues,
+  formLabel
 }:
 {
-  visible: boolean,                          
   onClose: () => void,                       
   onFormSubmitted: (data: EventFormData) => void
-  initialValues?: EventFormData;                 
+  initialValues?: EventFormData;
+  formLabel: string;                 
 }
 ) {
     // Local state for form fields
@@ -58,7 +59,7 @@ export default function EventForm({
   // TODO: Add field validation as needed
   return (
       <View>
-        <Text style={styles.modalHeader}>Create a Moment</Text>
+        <Text style={styles.modalHeader}>{formLabel}</Text>
         <TextInput
           placeholder="Title"
           value={form.title}

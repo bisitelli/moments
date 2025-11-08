@@ -1,6 +1,6 @@
-import CreateEventModal from "@/components/events/create_event_modal";
 import EventCard from "@/components/events/event_card";
 import { EventFormData } from "@/components/events/event_form";
+import EventModalFormWrapper from "@/components/events/event_modal_form_wrapper";
 import { EventItem } from "@/domain/entities/event_item";
 import { mapFormToRequestDTO } from "@/domain/infrastructure/mappers/event_mapper";
 import { useEventStore } from "@/store/use_event_store";
@@ -43,8 +43,9 @@ export default function EventsPage() {
             </TouchableOpacity>
 
             {/* Create Event Modal */}
-            <CreateEventModal
+            <EventModalFormWrapper
                 visible={showForm}
+                formLabel={"Create a Moment"}
                 onClose={() => setShowForm(false)}
                 onFormSubmitted={handleFormSubmit}
             />

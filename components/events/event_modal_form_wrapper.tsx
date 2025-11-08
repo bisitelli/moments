@@ -1,18 +1,21 @@
-import { Modal, View, StyleSheet, KeyboardAvoidingView, ScrollView, Platform, SafeAreaView } from "react-native";
+import { KeyboardAvoidingView, Modal, Platform, SafeAreaView, ScrollView, StyleSheet, View } from "react-native";
 import EventForm, { EventFormData } from "./event_form";
 
-export default function CreateEventModal(
+// Modal component to wrap the EventForm for creating or updating a new event
+export default function EventModalFormWrapper(
 {
     visible,
     onClose,
     onFormSubmitted,
-    initialValues
+    initialValues,
+    formLabel = "Event form"
 }:
 {
     visible: boolean;
     onClose: () => void;
     onFormSubmitted: (data: EventFormData) => void;
     initialValues?: EventFormData; // Optional initial values for editing existing event
+    formLabel?: string;
 }
  ) {
   return (
@@ -30,9 +33,9 @@ export default function CreateEventModal(
             <View style={styles.modalContainer}>
               <EventForm
                 initialValues={initialValues}
+                formLabel={formLabel}
                 onFormSubmitted={(data: EventFormData) => onFormSubmitted(data)}
                 onClose={onClose}
-                visible={visible}
             />
             </View>
           </ScrollView>
