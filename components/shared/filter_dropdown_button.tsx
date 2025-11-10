@@ -1,179 +1,148 @@
-import React, { useState } from "react";
-import { Animated, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import React, { useMemo, useState } from "react";
+import {
+  Modal,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  TouchableWithoutFeedback,
+  View,
+  FlatList,
+} from "react-native";
+import { FilterTag } from "@/domain/model/enums/filter_tag";
 
-interface FilterDropdownButtonProps {
-  // Tuple per option: [label to show, render function that returns the UI to mount outside]
-  options: [string, () => React.ReactNode][];
-  // Called when an option is selected. We pass the render function up to the parent.
-  onSelect: (render: () => React.ReactNode, index: number) => void;
-  // Optional index of the currently active filter (for highlight)
-  selectedIndex?: number | null;
+export type FilterOption = {
+  tag: FilterTag;
+  label: string;
+  render: () => React.ReactNode;
+};
+
+interface Props {
+  options: FilterOption[];
+  selectedTag: FilterTag | null;
+  onSelect: (render: () => React.ReactNode, tag: FilterTag) => void;
+  triggerLabel?: string;
 }
 
-/**
- * Dropdown filter button with visual highlight for selected filter.
- * - When a filter is active, the main button turns darker and shows its label.
- * - Highlights the selected option in the dropdown as well.
- */
 export default function DropdownButtonFilter({
   options,
+  selectedTag,
   onSelect,
-  selectedIndex = null,
-}: FilterDropdownButtonProps) {
-  const [isOpen, setIsOpen] = useState(false);
-  const [animation] = useState(new Animated.Value(0));
+  triggerLabel = "Filter",
+}: Props) {
+  const [open, setOpen] = useState(false);
 
-  // Toggle dropdown state with smooth animation
-  const toggleDropdown = () => {
-    Animated.timing(animation, {
-      toValue: isOpen ? 0 : 1,
-      duration: 200,
-      useNativeDriver: true,
-    }).start();
-    setIsOpen(!isOpen);
-  };
+  const selectedLabel = useMemo(() => {
+    const found = options.find((o) => o.tag === selectedTag);
+    return found?.label ?? triggerLabel;
+  }, [options, selectedTag, triggerLabel]);
 
-  // Animated style (fade + vertical scale)
-  const dropdownStyle = {
-    opacity: animation,
-    transform: [
-      {
-        scaleY: animation.interpolate({
-          inputRange: [0, 1],
-          outputRange: [0.9, 1],
-        }),
-      },
-    ],
-  };
-
-  // Main button label (shows selected filter name if any)
-  const mainLabel =
-    selectedIndex != null ? `${options[selectedIndex][0]} ⌄` : "Filter ⌄";
+  const close = () => setOpen(false);
 
   return (
-    <View style={styles.container}>
-      {/* Main trigger button */}
+    <View>
+      {/* Trigger button */}
       <TouchableOpacity
-        style={[
-          styles.mainButton,
-          selectedIndex != null && styles.mainButtonActive,
-        ]}
-        onPress={toggleDropdown}
+        onPress={() => setOpen(true)}
+        style={styles.trigger}
+        activeOpacity={0.8}
       >
-        <Text
-          style={[
-            styles.mainButtonText,
-            selectedIndex != null && styles.mainButtonTextActive,
-          ]}
-        >
-          {mainLabel}
-        </Text>
+        <Text style={styles.triggerText}>{selectedLabel}</Text>
+        <Text style={styles.caret}>▼</Text>
       </TouchableOpacity>
 
-      {/* Floating dropdown menu */}
-      {isOpen && (
-        <Animated.View style={[styles.dropdown, dropdownStyle]}>
-          {options.map(([label, render], index) => {
-            const isSelected = selectedIndex === index;
-            return (
-              <React.Fragment key={label}>
-                <TouchableOpacity
-                  style={[
-                    styles.optionButton,
-                    isSelected && styles.optionButtonSelected,
-                  ]}
-                  onPress={() => {
-                    onSelect(render, index);
-                    setIsOpen(false);
+      {/* Dropdown overlay */}
+      <Modal visible={open} transparent animationType="fade" onRequestClose={close}>
+        {/* Backdrop: tap outside to close */}
+        <TouchableOpacity style={styles.backdrop} activeOpacity={1} onPress={close}>
+          {/* Prevent closing when tapping inside the card */}
+          <TouchableWithoutFeedback>
+            {/* Wrapper to right-align the menu */}
+            <View style={styles.menuWrapper}>
+              <View style={styles.menuCard}>
+                <FlatList
+                  data={options}
+                  keyExtractor={(item) => String(item.tag)}
+                  renderItem={({ item }) => {
+                    const active = item.tag === selectedTag;
+                    return (
+                      <TouchableOpacity
+                        style={[styles.itemRow, active && styles.itemRowActive]}
+                        onPress={() => {
+                          onSelect(item.render, item.tag);
+                          close();
+                        }}
+                      >
+                        <Text style={[styles.itemText, active && styles.itemTextActive]}>
+                          {item.label}
+                        </Text>
+                      </TouchableOpacity>
+                    );
                   }}
-                >
-                  <Text
-                    style={[
-                      styles.optionText,
-                      isSelected && styles.optionTextSelected,
-                    ]}
-                  >
-                    {label}
-                  </Text>
-                </TouchableOpacity>
-
-                {index < options.length - 1 && <View style={styles.separator} />}
-              </React.Fragment>
-            );
-          })}
-        </Animated.View>
-      )}
+                  ItemSeparatorComponent={() => <View style={styles.separator} />}
+                />
+              </View>
+            </View>
+          </TouchableWithoutFeedback>
+        </TouchableOpacity>
+      </Modal>
     </View>
   );
 }
 
+const MENU_WIDTH = 220; // narrow menu width
+
 const styles = StyleSheet.create({
-  container: {
-    alignItems: "flex-end",
-    marginBottom: -8,
-    marginRight: 1,
-    position: "relative",
-    zIndex: 10,
-  },
-  mainButton: {
+  trigger: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    borderRadius: 20,
+    paddingHorizontal: 15,
+    paddingVertical: 8,
     backgroundColor: "#007AFF",
-    height: 45,
-    justifyContent: "center",
+    borderWidth: 1,
+    borderColor: "#007AFF", // match bg
+  },
+  // ← trigger text in white
+  triggerText: { fontWeight: "700", color: "#FFFFFF" },
+  // caret also white to match (optional, looks better)
+  caret: { marginLeft: 4, color: "#FFFFFF" },
+
+  // overlay
+  backdrop: {
+    flex: 1,
+    backgroundColor: "rgba(0,0,0,0.25)",
     paddingHorizontal: 20,
-    borderRadius: 10,
+    paddingTop: 100, // drop the menu a bit from the header
+  },
+
+  // right align the menu
+  menuWrapper: {
+    alignItems: "flex-end",
+  },
+
+  // narrow menu card aligned to the right
+  menuCard: {
+    width: MENU_WIDTH,
+    backgroundColor: "#fff",
+    borderRadius: 14,
+    paddingVertical: 6,
+    // shadows
     shadowColor: "#000",
     shadowOpacity: 0.15,
-    shadowRadius: 6,
-    shadowOffset: { width: 0, height: 2 },
-    elevation: 3,
-  },
-  mainButtonActive: {
-    backgroundColor: "#0056D2", // darker when active
-  },
-  mainButtonText: {
-    color: "white",
-    fontWeight: "600",
-    fontSize: 16,
-  },
-  mainButtonTextActive: {
-    color: "#E8F0FE", // lighter text when active
-  },
-  dropdown: {
-    position: "absolute",
-    top: 55,
-    right: 4,
-    backgroundColor: "white",
-    borderRadius: 14, // ✅ smoother border radius
-    paddingVertical: 8,
-    paddingHorizontal: 4,
-    shadowColor: "#000",
-    shadowOpacity: 0.2,
     shadowRadius: 10,
     shadowOffset: { width: 0, height: 4 },
-    elevation: 6,
-    width: 190,
-    zIndex: 20,
+    elevation: 8,
   },
-  optionButton: {
-    paddingVertical: 14,
-    paddingHorizontal: 15,
-    borderRadius: 10, // rounded inner corners
+  itemRow: {
+    paddingVertical: 10,
+    paddingHorizontal: 14,
+    borderRadius: 10,
   },
-  optionButtonSelected: {
-    backgroundColor: "#E8F0FE", // highlight selected option
+  itemRowActive: {
+    backgroundColor: "#007AFF12",
   },
-  optionText: {
-    fontSize: 15,
-    color: "#333",
-  },
-  optionTextSelected: {
-    color: "#007AFF", // blue for active text
-    fontWeight: "700",
-  },
-  separator: {
-    height: 1,
-    backgroundColor: "#E5E7EB",
-    marginHorizontal: 12,
-    opacity: 0.7,
-  },
+  itemText: { color: "#222", fontSize: 16 },
+  itemTextActive: { color: "#007AFF", fontWeight: "700" },
+  separator: { height: 6 },
 });
