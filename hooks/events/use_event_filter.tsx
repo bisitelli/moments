@@ -35,6 +35,7 @@ export function useEventFilter({
 
                 onClose();
               }}
+              onCancel={() => onClose()}
             />
           )
       ],
