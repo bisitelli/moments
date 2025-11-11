@@ -1,12 +1,13 @@
 // src/domain/datasources/event_datasource_impl.ts
-import { EventDataSource } from "@/domain/datasources/event_datasource";
-import type { EventParticipantResponseDTO } from "@/domain/model/dto/event_participant_response_dto";
-import type { EventRequestDTO } from "@/domain/model/dto/event_request_dto";
-import type { EventResponseDTO } from "@/domain/model/dto/event_response_dto";
+import { EventDataSource } from "@/domain/datasources/events/event_datasource";
+
+import { EventItem } from "@/domain/model/entities/events/event_item";
 import { InterestTag } from "@/domain/model/enums/interest_tag";
 import type { ApiService } from "@/domain/services/api_service";
-import { EventMapper } from "../mappers/event_mapper";
-import { EventItem } from "@/domain/model/entities/event_item";
+import { EventMapper } from "../../mappers/event_mapper";
+import { EventResponseDTO } from "@/domain/model/dto/events/event_response_dto";
+import { EventParticipantResponseDTO } from "@/domain/model/dto/events/event_participant_response_dto";
+import { EventRequestDTO } from "@/domain/model/dto/events/event_request_dto";
 
 export class EventDataSourceImpl implements EventDataSource {
   constructor(private readonly api: ApiService) {}

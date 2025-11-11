@@ -1,7 +1,7 @@
-import { EventParticipantResponseDTO } from "../model/dto/event_participant_response_dto";
-import { EventRequestDTO } from "../model/dto/event_request_dto";
-import { EventItem } from "../model/entities/event_item";
-import { InterestTag } from "../model/enums/interest_tag";
+import { EventParticipantResponseDTO } from "../../model/dto/events/event_participant_response_dto";
+import { EventRequestDTO } from "../../model/dto/events/event_request_dto";
+import { EventItem } from "../../model/entities/events/event_item";
+import { InterestTag } from "../../model/enums/interest_tag";
 
 /**
  * Domain repository contract for Events

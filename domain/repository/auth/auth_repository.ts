@@ -1,0 +1,44 @@
+// src/domain/repository/auth_repository.ts
+// Repository contract for authentication use cases.
+// Repositories orchestrate one or more data sources and expose stable methods
+// to the application layer (stores, use-cases, UI).
+
+import { RefreshTokenRequest } from "@/domain/model/dto/auth/refresh_token_auth_request";
+import { UserAuthRequest } from "@/domain/model/dto/auth/user_auth_request";
+import { UserAuthResponse } from "@/domain/model/dto/auth/user_auth_response";
+
+
+export interface AuthRepository {
+  /**
+   * Triggers the login flow (e.g., send verification code to email).
+   */
+  requestLoginEmail(request: UserAuthRequest): Promise<string>;
+
+  /**
+   * Verifies the email code and retrieves tokens.
+   */
+  verifyEmailCode(
+    code: string,
+    request: UserAuthRequest
+  ): Promise<UserAuthResponse>;
+
+  /**
+   * Registers a new user.
+   */
+  register(request: UserAuthRequest): Promise<void>;
+
+  /**
+   * Activates a registered account.
+   */
+  activateAccount(token: string, email: string): Promise<void>;
+
+  /**
+   * Refreshes tokens using a refresh token.
+   */
+  refreshToken(request: RefreshTokenRequest): Promise<UserAuthResponse>;
+
+  /**
+   * Logs out from the current session on the server.
+   */
+  logout(): Promise<void>;
+}

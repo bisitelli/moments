@@ -1,0 +1,41 @@
+// src/domain/infrastructure/repository/auth_repository_impl.ts
+// Concrete implementation of AuthRepository.
+// Keeps business/application logic minimal; delegates transport to the DataSource.
+
+import { AuthDataSource } from "@/domain/datasources/auth/auth_datasource";
+import { RefreshTokenRequest } from "@/domain/model/dto/auth/refresh_token_auth_request";
+import { UserAuthRequest } from "@/domain/model/dto/auth/user_auth_request";
+import { UserAuthResponse } from "@/domain/model/dto/auth/user_auth_response";
+import { AuthRepository } from "@/domain/repository/auth/auth_repository";
+
+
+export class AuthRepositoryImpl implements AuthRepository {
+  constructor(private readonly ds: AuthDataSource) {}
+
+  requestLoginEmail(request: UserAuthRequest): Promise<string> {
+    return this.ds.login(request);
+  }
+
+  verifyEmailCode(
+    code: string,
+    request: UserAuthRequest
+  ): Promise<UserAuthResponse> {
+    return this.ds.validateEmailCode(code, request);
+  }
+
+  register(request: UserAuthRequest): Promise<void> {
+    return this.ds.register(request);
+  }
+
+  activateAccount(token: string, email: string): Promise<void> {
+    return this.ds.activateAccount(token, email);
+  }
+
+  refreshToken(request: RefreshTokenRequest): Promise<UserAuthResponse> {
+    return this.ds.refreshToken(request);
+  }
+
+  logout(): Promise<void> {
+    return this.ds.logout();
+  }
+}

@@ -1,4 +1,4 @@
-import { InterestTag } from "../enums/interest_tag"
+import { InterestTag } from "../../enums/interest_tag"
 import { EventOrganiserResponseDTO } from "./event_organiser_response"
 
 export interface EventResponseDTO {

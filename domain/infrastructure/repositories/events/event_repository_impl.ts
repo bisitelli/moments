@@ -1,9 +1,9 @@
-import { EventRepository } from "@/domain/repository/event_repository";
-import { EventDataSource } from "@/domain/datasources/event_datasource";
+import { EventDataSource } from "@/domain/datasources/events/event_datasource";
 import { EventParticipantResponseDTO } from "@/domain/model/dto/event_participant_response_dto";
 import { EventRequestDTO } from "@/domain/model/dto/event_request_dto";
-import { EventItem } from "@/domain/model/entities/event_item";
+import { EventItem } from "@/domain/model/entities/events/event_item";
 import { InterestTag } from "@/domain/model/enums/interest_tag";
+import { EventRepository } from "@/domain/repository/events/event_repository";
 
 /**
  * Repository implementation that delegates all data fetching and persistence

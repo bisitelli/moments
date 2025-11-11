@@ -41,7 +41,8 @@ export class ApiServiceImpl implements ApiService {
     this.client.interceptors.request.use(
       async (config: AuthedAxiosRequestConfig) => {
         if (!config.skipAuth) {
-          const token = await AsyncStorage.getItem("access_token");
+          // const token = await AsyncStorage.getItem("access_token");
+          const token = "eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJqdWFuanVhbmdtb0BnbWFpbC5jb20iLCJpYXQiOjE3NjI3ODgwNjYsImV4cCI6MTc2Mjc4OTg2Nn0.fppWDAMP6dYzBb4oz7n4Gk5UE7_xsNYcv6NYclCcDzM"
           if (token) {
             config.headers = config.headers ?? {};
             // Use 'Authorization' capitalized — common requirement in many backends

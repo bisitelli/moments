@@ -1,7 +1,7 @@
+import { EventFormData } from "@/components/events/event_form";
 import { EventRequestDTO } from "@/domain/model/dto/event_request_dto";
 import { EventResponseDTO } from "@/domain/model/dto/event_response_dto";
-import { EventItem } from "@/domain/model/entities/event_item";
-import { EventFormData } from "@/components/events/event_form";
+import { EventItem } from "@/domain/model/entities/events/event_item";
 import { InterestTag } from "@/domain/model/enums/interest_tag";
 
 /**
