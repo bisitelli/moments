@@ -2,9 +2,12 @@
 import { EventFormData } from "@/components/events/event_form";
 import EventList from "@/components/events/event_list";
 import EventModalFormWrapper from "@/components/events/event_modal_form_wrapper";
+import EventFilterMenu from "@/components/shared/event_filter_menu";
+import ScrollableFilterButton from "@/components/shared/scrollable_filter_button";
 import { EventMapper } from "@/domain/infrastructure/mappers/event_mapper";
 import { InterestTag } from "@/domain/model/enums/interest_tag";
-import { useEventStore } from "@/store/use_event_store";
+import { useEventFilter } from "@/hooks/events/use_event_filter";
+import { useEventStore } from "@/store/events/use_event_store";
 import React, { useEffect, useState } from "react";
 import {
   Modal,
@@ -14,9 +17,6 @@ import {
   TouchableWithoutFeedback,
   View,
 } from "react-native";
-import EventFilterMenu from "@/components/shared/event_filter_menu";
-import { useEventFilter } from "@/hooks/events/use_event_filter";
-import ScrollableFilterButton from "@/components/shared/scrollable_filter_button";
 
 
 export default function DiscoverPage() {
