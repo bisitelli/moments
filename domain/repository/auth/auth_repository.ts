@@ -28,11 +28,6 @@ export interface AuthRepository {
   register(request: UserAuthRequest): Promise<void>;
 
   /**
-   * Activates a registered account.
-   */
-  activateAccount(token: string, email: string): Promise<void>;
-
-  /**
    * Refreshes tokens using a refresh token.
    */
   refreshToken(request: RefreshTokenRequest): Promise<UserAuthResponse>;

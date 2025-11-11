@@ -32,11 +32,6 @@ export interface AuthDataSource {
   register(request: UserAuthRequest): Promise<void>;
 
   /**
-   * Activates a user account using a token sent via email.
-   */
-  activateAccount(token: string, email: string): Promise<void>;
-
-  /**
    * Exchanges a refresh token for a new access/refresh token pair.
    */
   refreshToken(request: RefreshTokenRequest): Promise<UserAuthResponse>;

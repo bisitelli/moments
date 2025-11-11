@@ -33,14 +33,6 @@ export class AuthDataSourceImpl implements AuthDataSource {
     return this.api.post<void>("/auth/register", request, /* auth */ false);
   }
 
-  activateAccount(token: string, email: string): Promise<void> {
-    // Public endpoint with query params.
-    const endpoint = `/auth/activate-account?token=${encodeURIComponent(
-      token
-    )}&email=${encodeURIComponent(email)}`;
-    return this.api.get<void>(endpoint, /* params */ undefined, /* auth */ false);
-  }
-
   refreshToken(request: RefreshTokenRequest): Promise<UserAuthResponse> {
     // Refresh typically does not use the current access token.
     return this.api.post<UserAuthResponse>(

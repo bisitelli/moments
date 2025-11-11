@@ -27,10 +27,6 @@ export class AuthRepositoryImpl implements AuthRepository {
     return this.ds.register(request);
   }
 
-  activateAccount(token: string, email: string): Promise<void> {
-    return this.ds.activateAccount(token, email);
-  }
-
   refreshToken(request: RefreshTokenRequest): Promise<UserAuthResponse> {
     return this.ds.refreshToken(request);
   }
