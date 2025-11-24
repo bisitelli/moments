@@ -3,18 +3,18 @@
 // - Each async action toggles `isLoading` automatically.
 // - Errors are captured and stored (no rethrow).
 
-import { create } from "zustand";
-import AsyncStorage from "@react-native-async-storage/async-storage";
 import { container } from "@/dependency_injection/container";
-import { getErrorMessage } from "@/shared/error_utils";
+import { getErrorMessage } from "@/shared/utils/error_utils";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { create } from "zustand";
 
-import { User } from "@/domain/model/entities/users/user";
-import { UserAuthRequest } from "@/domain/model/dto/auth/user_auth_request";
 import { RefreshTokenRequest } from "@/domain/model/dto/auth/refresh_token_auth_request";
-import { AuthRepository } from "@/domain/repository/auth/auth_repository";
+import { UserAuthRequest } from "@/domain/model/dto/auth/user_auth_request";
 import { UserAuthResponse } from "@/domain/model/dto/auth/user_auth_response";
+import { User } from "@/domain/model/entities/users/user";
 import { AuthStatus } from "@/domain/model/enums/AuthStatus";
 import { StorageType } from "@/domain/model/enums/storage_type";
+import { AuthRepository } from "@/domain/repository/auth/auth_repository";
 
 interface UserAuthStore {
   user: User | null;
