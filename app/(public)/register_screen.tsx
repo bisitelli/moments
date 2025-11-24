@@ -1,5 +1,5 @@
 import AuthFormView from "@/components/auth/auth_form_view";
-import { showErrorTop, showMessageTop } from "@/shared/show_toast_message";
+import { showErrorTop, showMessageTop } from "@/shared/utils/show_toast_message";
 import { useUserAuthStore } from "@/store/auth/use_auth_store";
 import { useRouter } from "expo-router";
 import React from "react";
