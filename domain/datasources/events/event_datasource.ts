@@ -1,4 +1,4 @@
-import { EventParticipantResponseDTO } from "../../model/dto/events/event_participant_response_dto";
+import { EventParticipant } from "@/domain/model/entities/events/event_participant";
 import { EventRequestDTO } from "../../model/dto/events/event_request_dto";
 import { EventItem } from "../../model/entities/events/event_item";
 import { InterestTag } from "../../model/enums/interest_tag";
@@ -20,13 +20,13 @@ export interface EventDataSource {
   getEventsByLocation(city: string): Promise<EventItem[]>;
 
   /** GET /api/events/{eventId}/participants */
-  getEventParticipants(eventId: string): Promise<EventParticipantResponseDTO[]>;
+  getEventParticipants(eventId: string): Promise<EventParticipant[]>;
 
   /** POST /api/events (auth) */
   createEvent(request: EventRequestDTO): Promise<EventItem>;
 
   /** POST /api/events/participants/{participantId} (auth) */
-  subscribeToEvent(participantId: string): Promise<EventParticipantResponseDTO>;
+  subscribeToEvent(participantId: string): Promise<EventParticipant>;
 
   /** PUT /api/events/{eventId} (auth) */
   updateEvent(eventId: string, request: EventRequestDTO): Promise<EventItem>;

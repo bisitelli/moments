@@ -1,7 +1,7 @@
 import { EventDataSource } from "@/domain/datasources/events/event_datasource";
-import { EventParticipantResponseDTO } from "@/domain/model/dto/event_participant_response_dto";
-import { EventRequestDTO } from "@/domain/model/dto/event_request_dto";
+import { EventRequestDTO } from "@/domain/model/dto/events/event_request_dto";
 import { EventItem } from "@/domain/model/entities/events/event_item";
+import { EventParticipant } from "@/domain/model/entities/events/event_participant";
 import { InterestTag } from "@/domain/model/enums/interest_tag";
 import { EventRepository } from "@/domain/repository/events/event_repository";
 
@@ -37,7 +37,7 @@ export class EventRepositoryImpl implements EventRepository {
   }
 
   /** Fetch all participants of an event */
-  async getEventParticipants(eventId: string): Promise<EventParticipantResponseDTO[]> {
+  async getEventParticipants(eventId: string): Promise<EventParticipant[]> {
     return this.dataSource.getEventParticipants(eventId);
   }
 
@@ -47,7 +47,7 @@ export class EventRepositoryImpl implements EventRepository {
   }
 
   /** Subscribe the current user to an event (requires authentication) */
-  async subscribeToEvent(eventId: string): Promise<EventParticipantResponseDTO> {
+  async subscribeToEvent(eventId: string): Promise<EventParticipant> {
     return this.dataSource.subscribeToEvent(eventId);
   }
 

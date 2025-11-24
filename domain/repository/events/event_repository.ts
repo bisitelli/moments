@@ -1,3 +1,4 @@
+import { EventParticipant } from "@/domain/model/entities/events/event_participant";
 import { EventParticipantResponseDTO } from "../../model/dto/events/event_participant_response_dto";
 import { EventRequestDTO } from "../../model/dto/events/event_request_dto";
 import { EventItem } from "../../model/entities/events/event_item";
@@ -15,11 +16,11 @@ export interface EventRepository {
 
   getEventsByLocation(city: string): Promise<EventItem[]>;
 
-  getEventParticipants(eventId: string): Promise<EventParticipantResponseDTO[]>;
+  getEventParticipants(eventId: string): Promise<EventParticipant[]>;
 
   createEvent(request: EventRequestDTO): Promise<EventItem>;
 
-  subscribeToEvent(eventId: string): Promise<EventParticipantResponseDTO>;
+  subscribeToEvent(eventId: string): Promise<EventParticipant>;
 
   updateEvent(eventId: string, request: EventRequestDTO): Promise<EventItem>;
 
