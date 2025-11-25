@@ -1,15 +1,14 @@
-// DiscoverPage.tsx
 import { EventFormData } from "@/components/events/event_form";
 import EventList from "@/components/events/event_list";
 import EventModalFormWrapper from "@/components/events/event_modal_form_wrapper";
 import EventFilterMenu from "@/components/shared/event_filter_menu";
 import ScrollableFilterButton from "@/components/shared/scrollable_filter_button";
-import { EventMapper } from "@/domain/infrastructure/mappers/event_mapper";
+import { mapEventFormToDTO } from "@/domain/infrastructure/mappers/event_mapper";
 import { InterestTag } from "@/domain/model/enums/interest_tag";
 import { useEventFilter } from "@/hooks/events/use_event_filter";
 import { useEventFilterStore } from "@/store/events/use_event_filter_store";
-import { useEventStore } from "@/store/events/use_event_store";
-import React, { useEffect, useState } from "react";
+import { useUserEventStore } from "@/store/events/user_events_store";
+import React, { useCallback, useEffect, useState } from "react";
 import {
   Modal,
   StyleSheet,
@@ -18,59 +17,95 @@ import {
   TouchableWithoutFeedback,
   View,
 } from "react-native";
-
+import { EventRepository } from "@/domain/repository/events/event_repository";
+import { FilterTag } from "@/domain/model/enums/filter_tag";
+import { useEventsStore } from "@/store/events/use_events_store_factory";
 
 export default function DiscoverPage() {
-  const otherEvents = useEventStore((s) => s.otherEvents);
-  const eventsFilteredByInterest = useEventStore((s) => s.filteredEvents);
-  const updateFilteredEvents = useEventStore((s) => s.updateFilteredEvents);
-  const createEvent = useEventStore((s) => s.createEvent);
-  const fetchOtherEvents = useEventStore((s) => s.fetchOtherEvents);
+  // --- Global Store Data ---
   const interestFilter = useEventFilterStore((s) => s.interestFilter);
   const setInterest = useEventFilterStore((s) => s.setInterest);
+  const createEvent = useUserEventStore((s) => s.createEvent);
+  
+  // --- Pagination Store Hooks ---
+  const { events, loadNextPage, refreshState, loading, hasMore } = useEventsStore();
 
+  // --- Local Search State (Strategy Inputs) ---
+  const [tagMode, setTagMode] = useState<FilterTag>(FilterTag.Location);
+  const [location, setLocation] = useState("Leuven"); 
+  const [date, setDate] = useState(new Date().toISOString().split('T')[0]); // YYYY-MM-DD
+
+  // --- UI State ---
   const [showForm, setShowForm] = useState(false);
-  let isInterestAll = interestFilter === InterestTag.ALL
-
-  // Render function for the active filter (e.g., <DropdownInput />)
-  const [activeFilterRender, setActiveFilterRender] =
-    useState<(() => React.ReactNode) | null>(null);
-
-  // Overlay visibility for the filter (STACK overlay)
+  const [activeFilterRender, setActiveFilterRender] = useState<(() => React.ReactNode) | null>(null);
   const [filterVisible, setFilterVisible] = useState(false);
+
+  // --- Helpers ---
+  const closeFilter = () => {
+    setFilterVisible(false);
+    setActiveFilterRender(null);
+  };
+
+  // --- Filter Menu Configuration ---
+  // We pass the setters to the hook so the menu can update our local state
+  const filterOptions = useEventFilter({
+    onClose: closeFilter,
+    onLocationChange: setLocation,
+    onDateChange: setDate,
+    onModeChange: setTagMode,
+  });
 
   const filterButtons = Object.values(InterestTag)
     .map(tag => ({
       key: tag,
       label: tag.charAt(0).toUpperCase() + tag.slice(1).toLowerCase(), // From ALL to All
-    }))
+    }));
 
-  // Listen for changes in the interest filter and update the events accordingly
+  /**
+   * This function captures the current state (Location/Date + Interest Tags)
+   * and decides which Repository method to call.
+   */
+  const fetchStrategy = useCallback(async (repo: EventRepository, page: number) => {
+    // Convert 'ALL' to undefined so the repo ignores the tag filter if needed
+    const tags = interestFilter === InterestTag.ALL ? undefined : [interestFilter];
+
+    if (tagMode === FilterTag.Location) {
+       // Case A: Filter by Location AND Tags
+       return repo.getEventsByLocation(location, page, tags); 
+    } else {
+       // Case B: Filter by Date AND Tags
+       return repo.getEventsByDateAscending(date, page, tags);
+    }
+  }, [tagMode, location, date, interestFilter]);
+
+
+  // --- Effects ---
+  // Listen for changes in ANY filter (Interest, Location, Date, Mode)
+  // and trigger a fresh load.
   useEffect(() => {
-  // cuando cambian eventos o el filtro (y no es ALL), recalcula filtrados
-  if (interestFilter === InterestTag.ALL) return;
-  updateFilteredEvents(interestFilter);
-}, [otherEvents, interestFilter]);
+    // 1. Reset the list (page = 0, events = [])
+    refreshState();
+    // 2. Load first page with the new strategy
+    loadNextPage(fetchStrategy);
+  }, [fetchStrategy, refreshState, loadNextPage]); 
 
-  
-  // Filter the events by the interest tag
+
+  // --- Handlers ---
+
   const onFilterByInterestTagChanged = (tag: InterestTag) => {
     setInterest(tag);
   }
 
-  // Initial filter state (TODO: take the user location by default)
-  useEffect(() => {
-    fetchOtherEvents((repo) => repo.getEventsByLocation("Leuven"));
-  }, []);
-
   function handleFormSubmit(data: EventFormData) {
-    createEvent(EventMapper.fromForm(data));
+    createEvent(mapEventFormToDTO(data));
     setShowForm(false);
   }
 
-  const closeFilter = () => {
-    setFilterVisible(false);
-    setActiveFilterRender(null);
+  // Infinite Scroll Handler
+  const handleLoadMore = () => {
+    if (!loading && hasMore) {
+      loadNextPage(fetchStrategy);
+    }
   };
 
   return (
@@ -80,16 +115,18 @@ export default function DiscoverPage() {
         <Text style={styles.header}>Discover events 🌍</Text>
 
         <View style={{marginRight: 12, marginTop: 5}}>
+          {/* We pass the configured options to the menu */}
           <EventFilterMenu
-          filterOptions={useEventFilter({ onClose: closeFilter })}
-          onSelect={(render) => {
-            setActiveFilterRender(() => render);
-            setFilterVisible(true);
-          }}
-        />
+            filterOptions={filterOptions}
+            onSelect={(render) => {
+              setActiveFilterRender(() => render);
+              setFilterVisible(true);
+            }}
+          />
         </View>
       </View>
-        {/* Interest Tag Filter */}
+
+      {/* Interest Tag Filter */}
       <View style={styles.header}>
         <ScrollableFilterButton
           data={filterButtons}
@@ -101,9 +138,11 @@ export default function DiscoverPage() {
 
       {/* Events list */}
       <EventList
-        events={isInterestAll ? otherEvents : eventsFilteredByInterest}
-        emptyComponentLabel="No events yet 😕"
+        events={events} 
+        emptyComponentLabel={loading ? "Loading..." : "No events yet 😕"}
         contentContainerStyle={{paddingTop: 0}}
+        onLoadMore={handleLoadMore}
+        isLoadingMore={loading}
       />
 
       {/* Add event button */}
