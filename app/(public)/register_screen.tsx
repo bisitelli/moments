@@ -7,8 +7,8 @@ import React from "react";
 export default function RegisterScreen() {
 
   const registerUser = useUserAuthStore((state) => state.register);
-  const authError = useUserAuthStore((state) => state.error);
-  const isLoading = useUserAuthStore((state) => state.isLoading);
+  const authError = useUserAuthStore((state) => state.errorLogin);
+  const isLoading = useUserAuthStore((state) => state.isLoginLoading);
   const router = useRouter();
   
 

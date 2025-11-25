@@ -5,8 +5,8 @@ import { useRouter } from "expo-router";
 
 export default function LoginScreen() {
   const loginUser = useUserAuthStore((state) => state.requestLoginEmail);
-  const authError = useUserAuthStore((state) => state.error);
-  const isLoading = useUserAuthStore((state) => state.isLoading);
+  const authError = useUserAuthStore((state) => state.errorLogin);
+  const isLoading = useUserAuthStore((state) => state.isLoginLoading);
   const router = useRouter();
 
   const handleEmailSubmit = async (email: string) => {

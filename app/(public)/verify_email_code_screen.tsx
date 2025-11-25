@@ -8,8 +8,8 @@ import React from "react";
 export default function VerifyEmailCodeScreen() {
 
   const verifyEmailCode = useUserAuthStore((state) => state.verifyEmailCode);
-  const authError = useUserAuthStore((state) => state.error);
-  const isLoading = useUserAuthStore((state) => state.isLoading);
+  const authError = useUserAuthStore((state) => state.errorCode);
+  const isLoading = useUserAuthStore((state) => state.isLoadingCode);
   const router = useRouter()
   
 
