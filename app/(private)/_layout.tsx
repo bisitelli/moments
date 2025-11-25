@@ -14,12 +14,6 @@ function FullscreenLoader() {
 
 export default function PrivateLayout() {
   const authStatus = useUserAuthStore((s) => s.authStatus);
-  const isLoading  = useUserAuthStore((s) => s.isLoginLoading);
-
-  // Block rendering while auth is being checked to avoid flicker
-  if (isLoading || authStatus === AuthStatus.CHECKING) {
-    return <FullscreenLoader />;
-  }
 
   // If the user is not authenticated, kick them to the public group
   if (authStatus !== AuthStatus.AUTHENTICATED) {

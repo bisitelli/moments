@@ -8,6 +8,7 @@ import { FilterTag } from "@/domain/model/enums/filter_tag";
 import { InterestTag } from "@/domain/model/enums/interest_tag";
 import { EventRepository } from "@/domain/repository/events/event_repository";
 import { useEventFilter } from "@/hooks/events/use_event_filter";
+import { useUserAuthStore } from "@/store/auth/use_auth_store";
 import { useEventFilterStore } from "@/store/events/use_event_filter_store";
 import { useEventsStore } from "@/store/events/use_events_store_factory";
 import { useUserEventStore } from "@/store/events/user_events_store";
@@ -26,6 +27,7 @@ export default function DiscoverPage() {
   const interestFilter = useEventFilterStore((s) => s.interestFilter);
   const setInterest = useEventFilterStore((s) => s.setInterest);
   const createEvent = useUserEventStore((s) => s.createEvent);
+  const logout = useUserAuthStore((s) => s.logout)
   
   // --- Pagination Store Hooks ---
   const { events, loadNextPage, reset: refreshState, loading, hasMore } = useEventsStore();
@@ -150,6 +152,12 @@ export default function DiscoverPage() {
         <Text style={styles.addButtonText}>＋</Text>
       </TouchableOpacity>
 
+
+      {/* TODO: Remove this button JUST LOGOUT WHILE PROFILE NOT IMPLEMENTED */}
+      <TouchableOpacity style={styles.provisionalLogoutButton} onPress={() => logout()}>
+        <Text style={styles.provisionalLogoutButtonLabel}>Logout(Test)</Text>
+      </TouchableOpacity>
+
       {/* OVERLAY with TRANSPARENT wrapper */}
       <Modal
         visible={filterVisible}
@@ -209,7 +217,21 @@ const styles = StyleSheet.create({
     alignItems: "center",
     elevation: 3,
   },
+
+  provisionalLogoutButton: {
+    position: "absolute",
+    bottom: 100,
+    right: 30,
+    backgroundColor: "#007AFF",
+    borderRadius: 50,
+    width: 60,
+    height: 60,
+    justifyContent: "center",
+    alignItems: "center",
+    elevation: 3,
+  },
   addButtonText: { color: "white", fontSize: 36, lineHeight: 36 },
+  provisionalLogoutButtonLabel: { color: "white", fontSize: 9, lineHeight: 36 },
 
   // === OVERLAY ===
   backdrop: {

@@ -30,6 +30,7 @@ interface UserAuthStore {
   setCodeError: (message: string | null) => void;
   clearUser: () => Promise<void>;
 
+  initializeSession: () => void;
   requestLoginEmail: (email: string) => Promise<boolean>;
   verifyEmailCode: (code: string) => Promise<boolean>;
   register: (email: string) => Promise<boolean>;
@@ -38,7 +39,7 @@ interface UserAuthStore {
 
 export const useUserAuthStore = create<UserAuthStore>((set, get) => ({
   user: null,
-  authStatus: AuthStatus.NOT_AUTHENTICATED,
+  authStatus: AuthStatus.CHECKING,
   
   errorLogin: null,
   isLoginLoading: false,
@@ -63,6 +64,41 @@ export const useUserAuthStore = create<UserAuthStore>((set, get) => ({
       StorageType.USER_CREDENTIALS
     ]);
     set({ user: null, authStatus: AuthStatus.NOT_AUTHENTICATED, errorLogin: null });
+  },
+
+  initializeSession: async () => {
+    const state = get()
+
+    try {
+      // Assure the status is checking
+      set({ authStatus: AuthStatus.CHECKING });
+
+      // TODO: Cache the user profile (save it when filling it)
+      const token = await AsyncStorage.getItem(StorageType.ACCESS_TOKEN);
+      const email = await AsyncStorage.getItem(StorageType.USER_CREDENTIALS);
+
+      if (token && email) {
+
+        // Restore the session
+        // TODO: Fetch user & profile data from backend
+        set({ 
+            authStatus: AuthStatus.AUTHENTICATED,
+            user: new User(email, "") 
+        });
+
+      } else {
+
+        set({ authStatus: AuthStatus.NOT_AUTHENTICATED });
+        state.clearUser()
+        
+      }
+    } catch (error) {
+
+      console.error("Error initializing session:", error);
+      set({ authStatus: AuthStatus.NOT_AUTHENTICATED });
+
+      state.clearUser()
+    }
   },
 
   /**
