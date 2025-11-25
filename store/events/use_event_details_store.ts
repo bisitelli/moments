@@ -66,21 +66,27 @@ export const useEventDetailStore = create<EventDetailStore>((set, get) => ({
 
     if (!state.hasMoreParticipants) return
 
+    const actualPage = state.currentPage
+
     // Set loading state and clear previous errors/data
     set({ isLoadingParticipants: true, errorLoadingParticipants: null }); 
     try {
       const callback = await eventRepository
-        .getEventParticipants(id, state.currentPage);
+        .getEventParticipants(id, actualPage);
 
       set({
         eventParticipants: [...state.eventParticipants, ...callback.participants],
         isLoadingParticipants: false,
-        currentPage: ++state.currentPage,
+        currentPage: actualPage + 1,
         hasMoreParticipants: callback.hasMore
       });
 
     } catch (err: unknown) {
-      set({ errorLoadingParticipants: getErrorMessage(err), isLoadingParticipants: false });
+      set({
+        errorLoadingParticipants: getErrorMessage(err),
+        isLoadingParticipants: false,
+        hasMoreParticipants: false
+      });
     }
   },
 
