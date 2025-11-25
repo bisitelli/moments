@@ -1,10 +1,10 @@
-import { create } from "zustand";
-import { EventItem } from "@/domain/model/entities/events/event_item";
-import { getErrorMessage } from "@/shared/utils/error_utils";
-import { FilterTag } from "@/domain/model/enums/filter_tag";
-import { EventRepository } from "@/domain/repository/events/event_repository";
 import { container } from "@/dependency_injection/container";
 import { EventListRestult } from "@/domain/model/dto/events/event_list_result";
+import { EventItem } from "@/domain/model/entities/events/event_item";
+import { FilterTag } from "@/domain/model/enums/filter_tag";
+import { EventRepository } from "@/domain/repository/events/event_repository";
+import { getErrorMessage } from "@/shared/utils/error_utils";
+import { create } from "zustand";
 
 export interface EventsStore {
   events: EventItem[];
@@ -22,7 +22,7 @@ export interface EventsStore {
   // --- Actions ---
   // fetchCallback is now passed here
   loadNextPage: (fetchCallback: (repo: EventRepository, page: number) => Promise<EventListRestult>) => Promise<void>;
-  refreshState: () => void; 
+  reset: () => void; 
   setFilter: (newFilter: FilterTag) => void
 }
 
@@ -63,7 +63,7 @@ export const useEventsStore = create<EventsStore>((set, get) => ({
     }
   },
 
-  refreshState: () => {
+  reset: () => {
     set({
       events: [],
       currentPage: 0,
@@ -79,6 +79,6 @@ export const useEventsStore = create<EventsStore>((set, get) => ({
     if (state.actualFilter == newFilter) return
 
     // If filter has changed
-    state.refreshState()
+    state.reset()
   }
 }));

@@ -4,9 +4,12 @@ import EventModalFormWrapper from "@/components/events/event_modal_form_wrapper"
 import EventFilterMenu from "@/components/shared/event_filter_menu";
 import ScrollableFilterButton from "@/components/shared/scrollable_filter_button";
 import { mapEventFormToDTO } from "@/domain/infrastructure/mappers/event_mapper";
+import { FilterTag } from "@/domain/model/enums/filter_tag";
 import { InterestTag } from "@/domain/model/enums/interest_tag";
+import { EventRepository } from "@/domain/repository/events/event_repository";
 import { useEventFilter } from "@/hooks/events/use_event_filter";
 import { useEventFilterStore } from "@/store/events/use_event_filter_store";
+import { useEventsStore } from "@/store/events/use_events_store_factory";
 import { useUserEventStore } from "@/store/events/user_events_store";
 import React, { useCallback, useEffect, useState } from "react";
 import {
@@ -17,9 +20,6 @@ import {
   TouchableWithoutFeedback,
   View,
 } from "react-native";
-import { EventRepository } from "@/domain/repository/events/event_repository";
-import { FilterTag } from "@/domain/model/enums/filter_tag";
-import { useEventsStore } from "@/store/events/use_events_store_factory";
 
 export default function DiscoverPage() {
   // --- Global Store Data ---
@@ -28,7 +28,7 @@ export default function DiscoverPage() {
   const createEvent = useUserEventStore((s) => s.createEvent);
   
   // --- Pagination Store Hooks ---
-  const { events, loadNextPage, refreshState, loading, hasMore } = useEventsStore();
+  const { events, loadNextPage, reset: refreshState, loading, hasMore } = useEventsStore();
 
   // --- Local Search State (Strategy Inputs) ---
   const [tagMode, setTagMode] = useState<FilterTag>(FilterTag.Location);
