@@ -1,16 +1,20 @@
 import DropdownInput from "@/components/shared/drop_down_input";
 import { FilterTag, FilterTagLabel } from "@/domain/model/enums/filter_tag";
-import { useEventFilterStore } from "@/store/events/use_event_filter_store";
-import { useEventStore } from "@/store/events/use_event_store";
+import React from "react";
+
+interface UseEventFilterProps {
+  onClose: () => void;
+  onLocationChange: (location: string) => void;
+  onDateChange: (date: string) => void;
+  onModeChange: (mode: FilterTag) => void;
+}
 
 export function useEventFilter({
-  onClose
-}:{
-  onClose: () => void
-}):[string, () => React.ReactNode][] {
-
-  const fetchOtherEvents = useEventStore(state => state.fetchOtherEvents);
-  const setSelectedFilter = useEventFilterStore(state => state.setFilterState)
+  onClose,
+  onLocationChange,
+  onDateChange,
+  onModeChange
+}: UseEventFilterProps): [string, () => React.ReactNode][] {
 
   const filterOptions: [string, () => React.ReactNode][] = [
       [
@@ -22,18 +26,16 @@ export function useEventFilter({
               const trimmed = value.trim();
               if (!trimmed) return;
 
-              // Update the filter state
-              setSelectedFilter(FilterTag.Location)
+              // 1. Update the specific data state
+              onLocationChange(trimmed);
+              
+              // 2. Switch the mode to Location
+              onModeChange(FilterTag.Location);
             
-              // Trigger async fetch from repository
-              fetchOtherEvents(async (repo) => {
-                  const events = await repo.getEventsByLocation(trimmed);
-                  return events;
-              });
-
+              // 3. Close the modal (The useEffect in DiscoverPage will trigger the fetch)
               onClose();
-          }}
-          onCancel={() => onClose()}
+            }}
+            onCancel={() => onClose()}
           />
         ),
       ],
@@ -48,14 +50,13 @@ export function useEventFilter({
                 const trimmed = value.trim();
                 if (!trimmed) return;
 
-                // Update filter state
-                setSelectedFilter(FilterTag.Date)
+                // 1. Update the specific data state
+                onDateChange(trimmed);
 
-                fetchOtherEvents(async (repo) => {
-                  const events = await repo.getEventsByDateAscending(trimmed);
-                  return events;
-                });
+                // 2. Switch the mode to Date
+                onModeChange(FilterTag.Date);
 
+                // 3. Close
                 onClose();
               }}
               onCancel={() => onClose()}
@@ -63,5 +64,5 @@ export function useEventFilter({
           ),
       ],
   ];
-  return filterOptions
+  return filterOptions;
 }
