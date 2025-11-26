@@ -4,6 +4,7 @@
 // to the application layer (stores, use-cases, UI).
 
 import { RefreshTokenRequest } from "@/domain/model/dto/auth/refresh_token_auth_request";
+import { TokenRequest } from "@/domain/model/dto/auth/token_request";
 import { UserAuthRequest } from "@/domain/model/dto/auth/user_auth_request";
 import { UserAuthResponse } from "@/domain/model/dto/auth/user_auth_response";
 
@@ -13,6 +14,9 @@ export interface AuthRepository {
    * Triggers the login flow (e.g., send verification code to email).
    */
   requestLoginEmail(request: UserAuthRequest): Promise<void>;
+
+  // Login with google authentication
+  externalLogin(request: TokenRequest): Promise<UserAuthResponse>;
 
   /**
    * Verifies the email code and retrieves tokens.

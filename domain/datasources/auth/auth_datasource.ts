@@ -1,9 +1,10 @@
-// src/domain/datasource/auth_data_source.ts
+  // src/domain/datasource/auth_data_source.ts
 // Contract for remote/local data providers of authentication features.
 // Implementations should only handle transport concerns (HTTP, storage, etc.)
 // and return raw DTOs without domain logic.
 
 import { RefreshTokenRequest } from "@/domain/model/dto/auth/refresh_token_auth_request";
+import { TokenRequest } from "@/domain/model/dto/auth/token_request";
 import { UserAuthRequest } from "@/domain/model/dto/auth/user_auth_request";
 import { UserAuthResponse } from "@/domain/model/dto/auth/user_auth_response";
 
@@ -16,6 +17,12 @@ export interface AuthDataSource {
    * @returns A plain string as returned by the server (e.g., status/trace message).
    */
   login(request: UserAuthRequest): Promise<void>;
+
+  /**
+   * Authenticates via Google OAuth2.
+   * Sends the Google ID Token to the backend to verify and retrieve app tokens.
+   */
+  googleLogin(request: TokenRequest): Promise<UserAuthResponse>;
 
   /**
    * Validates the email verification code and issues tokens.

@@ -9,9 +9,11 @@
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "ios": {
+      "bundleIdentifier": "com.mbproyect.campusconnect",
       "supportsTablet": true
     },
     "android": {
+      "package": "com.mbproyect.campusconnect",
       "adaptiveIcon": {
         "backgroundColor": "#E6F4FE",
         "foregroundImage": "./assets/images/android-icon-foreground.png",
@@ -27,6 +29,14 @@
     },
     "plugins": [
       "expo-router",
+
+      [
+        "@react-native-google-signin/google-signin",
+        {
+          "iosUrlScheme": "com.googleusercontent.apps.293134271464-i4qnsbvso6049ha4eopa4rp5jk1ksrfe"
+        }
+      ],
+      
       [
         "expo-splash-screen",
         {
@@ -38,12 +48,18 @@
             "backgroundColor": "#000000"
           }
         }
-      ],
-      "expo-web-browser"
+      ]
     ],
     "experiments": {
       "typedRoutes": true,
       "reactCompiler": true
-    }
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "e5f092b3-e5ff-47ef-a03b-fdd38ac55bb3"
+      }
+    },
+    "owner": "juangomez"
   }
 }

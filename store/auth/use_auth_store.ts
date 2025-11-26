@@ -26,15 +26,16 @@ interface UserAuthStore {
   setUser: (user: User) => void;
   setAuthStatus: (status: AuthStatus) => void;
   setLoginError: (message: string | null) => void;
-  setRegisterError: (message: string | null) => void;
   setCodeError: (message: string | null) => void;
   clearUser: () => Promise<void>;
 
   initializeSession: () => void;
+  requestExternalLogin: (idToken: string) => Promise<boolean>;
   requestLoginEmail: (email: string) => Promise<boolean>;
   verifyEmailCode: (code: string) => Promise<boolean>;
   register: (email: string) => Promise<boolean>;
   logout: () => Promise<void>;
+  setUserAuthenticated: (resp: UserAuthResponse) => Promise<void>;
 }
 
 export const useUserAuthStore = create<UserAuthStore>((set, get) => ({
@@ -54,7 +55,7 @@ export const useUserAuthStore = create<UserAuthStore>((set, get) => ({
   setAuthStatus: (status: AuthStatus) => set({ authStatus: status }),
   setLoginError: (message: string | null) => set({ errorLogin: message }),
   setCodeError: (message: string | null) => set({ errorCode: message }),
-  setRegisterError: (message: string | null) => set({ errorRegister: message }),
+  
 
   clearUser: async () => {
     // Remove tokens and reset user/auth state
@@ -99,6 +100,39 @@ export const useUserAuthStore = create<UserAuthStore>((set, get) => ({
 
       state.clearUser()
     }
+  },
+
+
+  requestExternalLogin: async (idToken: string) => {
+
+    if (idToken.trim.length === 0) return false
+
+    const state = get()
+    
+    if (state.isLoginLoading) return false
+
+    set({ isLoginLoading: true, errorLogin: null })
+
+    // Validate the token with the backend
+    try {
+
+      // repo request
+      const response = await container.authRepository.externalLogin({ idToken })
+      state.setUserAuthenticated(response)
+
+      return true
+
+    } catch (error: unknown){
+
+      set({
+        errorLogin: getErrorMessage(error),
+        isLoginLoading: false,
+        authStatus: AuthStatus.NOT_AUTHENTICATED
+      })
+
+      return false
+    }
+
   },
 
   /**
@@ -149,24 +183,9 @@ export const useUserAuthStore = create<UserAuthStore>((set, get) => ({
       const request: UserAuthRequest = { email };
       const resp: UserAuthResponse = await container
         .authRepository.verifyEmailCode(code, request);
+
+      state.setUserAuthenticated(resp)
       
-      if (!resp?.accessToken || !resp?.refreshToken) throw new Error("Invalid auth response");
-
-      await AsyncStorage.setItem(StorageType.ACCESS_TOKEN, resp.accessToken);
-      await AsyncStorage.setItem(StorageType.REFRESH_TOKEN, resp.refreshToken);
-      await AsyncStorage.setItem(StorageType.USER_CREDENTIALS, resp.email)
-
-      const authenticatedUser = state.user.copyWith({
-        username: email.split("@")[0],
-      });
-
-      set({
-        user: authenticatedUser,
-        authStatus: AuthStatus.AUTHENTICATED,
-        errorCode: null,
-        isLoadingCode: false
-      });
-
       return true
 
     } catch (e: unknown) {
@@ -216,4 +235,37 @@ export const useUserAuthStore = create<UserAuthStore>((set, get) => ({
       set({ errorLogin: getErrorMessage(e), isLoginLoading: false});
     }
   },
+
+  setUserAuthenticated: async (resp: UserAuthResponse) => {
+    if (!resp?.accessToken || !resp?.refreshToken) throw new Error("Invalid auth response");
+
+    const state = get()
+
+    if (!state.user) {
+      state.setUser(
+        new User(
+          resp.email,
+          resp.email.split("@")[0])
+      )
+    }
+
+    else {
+      state.setUser(
+          state.user.copyWith({
+          username: resp.email.split("@")[0],
+        })
+      )
+    }
+
+    await AsyncStorage.setItem(StorageType.ACCESS_TOKEN, resp.accessToken);
+    await AsyncStorage.setItem(StorageType.REFRESH_TOKEN, resp.refreshToken);
+    await AsyncStorage.setItem(StorageType.USER_CREDENTIALS, resp.email)
+
+    set({
+      authStatus: AuthStatus.AUTHENTICATED,
+      errorCode: null,
+      isLoadingCode: false
+    });
+
+  }
 }));

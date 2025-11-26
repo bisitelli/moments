@@ -1,22 +1,13 @@
 import AuthFormView from "@/components/auth/auth_form_view";
-import { showErrorTop, showMessage } from "@/shared/utils/show_toast_message";
-import { useUserAuthStore } from "@/store/auth/use_auth_store";
-import { useRouter } from "expo-router";
+import { useLoginViewModel } from "@/hooks/auth/use_login_view_model";
 
 export default function LoginScreen() {
-  const loginUser = useUserAuthStore((state) => state.requestLoginEmail);
-  const isLoading = useUserAuthStore((state) => state.isLoginLoading);
-  const router = useRouter();
-
-  const handleEmailSubmit = async (email: string) => {
-    const success = await loginUser(email);
-
-    if (!success) {
-      const error = useUserAuthStore.getState().errorLogin
-      return showErrorTop(`Login failed: ${error}`);
-    }
-    router.push("/(public)/verify_email_code_screen");
-  };
+  const { 
+    isLoading, 
+    handleEmailSubmit, 
+    handleGooglePress, 
+    onSignUpPress,
+  } = useLoginViewModel();
 
   return (
     <AuthFormView
@@ -25,14 +16,19 @@ export default function LoginScreen() {
       placeholder="you@example.com"
       submitLabel="Continue with email"
       emptyFieldMessage="Email field is required"
-      showGoogleButton={true}
+      
+      // Props mapped from ViewModel
       isLoading={isLoading}
+      showGoogleButton={true}
+      
+      // Actions
       onSubmit={handleEmailSubmit}
-      onGooglePress={() => showMessage("Google sign-in pressed")}
-      onSignUpPress={() => router.push("/(public)/register_screen")}
+      onGooglePress={handleGooglePress}
+      onSignUpPress={onSignUpPress}
+      
+      // UI Config
       formLabel="Email"
       keyboardType="email-address"
     />
   );
 }
-

@@ -8,6 +8,7 @@ import { RefreshTokenRequest } from "../../../model/dto/auth/refresh_token_auth_
 import { UserAuthRequest } from "../../../model/dto/auth/user_auth_request";
 import { UserAuthResponse } from "../../../model/dto/auth/user_auth_response";
 import { AuthDataSource } from "@/domain/datasources/auth/auth_datasource";
+import { TokenRequest } from "@/domain/model/dto/auth/token_request";
 
 export class AuthDataSourceImpl implements AuthDataSource {
   constructor(private readonly api: ApiService) {}
@@ -15,6 +16,10 @@ export class AuthDataSourceImpl implements AuthDataSource {
   login(request: UserAuthRequest): Promise<void> {
     // Public endpoint: do not attach Authorization header.
     return this.api.post<void>("/auth/login", request, /* auth */ false);
+  }
+
+  async googleLogin(request: TokenRequest): Promise<UserAuthResponse> {
+    return this.api.post<UserAuthResponse>("/auth/google", request, /* auth */ false);
   }
 
   validateEmailCode(
