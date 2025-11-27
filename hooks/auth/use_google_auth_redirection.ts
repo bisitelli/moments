@@ -7,13 +7,16 @@ import {
 
 export const useGoogleAuthRedirection = (
   onLoginSuccess: (idToken: string) => Promise<void>,
-  onLoginFailed: (error: string) => void,
+  onLoginFailed: (error?: string) => void,
 ) => {
+
+  const WEB_CLIENT_ID = process.env.GOOGLE_WEB_CLIENT_ID ?? ""
+  const IOS_CLIENT_ID = process.env.GOOGLE_IOS_CLIENT_ID ?? ""
 
   useEffect(() => {
     GoogleSignin.configure({
-      webClientId: '293134271464-kni5th5qgihkdso5nk7ouvcah7rnpct3.apps.googleusercontent.com',
-      iosClientId: '293134271464-i4qnsbvso6049ha4eopa4rp5jk1ksrfe.apps.googleusercontent.com',
+      webClientId: WEB_CLIENT_ID,
+      iosClientId: IOS_CLIENT_ID,
       scopes: ['profile', 'email'],
       offlineAccess: true,
       forceCodeForRefreshToken: false,
@@ -50,20 +53,14 @@ export const useGoogleAuthRedirection = (
 
       if (isErrorWithCode(error)) {
         switch (error.code) {
-          case statusCodes.SIGN_IN_CANCELLED:
-            onLoginFailed("User cancelled the login flow");
-            break;
-          case statusCodes.IN_PROGRESS:
-            onLoginFailed("Sign in is in progress");
-            break;
           case statusCodes.PLAY_SERVICES_NOT_AVAILABLE:
             onLoginFailed("Play services not available or outdated");
             break;
           default:
-            onLoginFailed("Google login failed with code: " + error.code);
+            onLoginFailed();
         }
       } else {
-        onLoginFailed("Google login failed");
+        onLoginFailed();
       }
     }
   };

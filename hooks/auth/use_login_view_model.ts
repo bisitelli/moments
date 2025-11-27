@@ -43,8 +43,8 @@ export const useLoginViewModel = () => {
 
   };
 
-  const handleExternalFailed = (error: any) => {
-    const msg = error?.message || "Google authentication failed";
+  const handleExternalFailed = (error?: string) => {
+    const msg = error ?? "Google authentication failed";
     showErrorTop(msg);
   };
 
