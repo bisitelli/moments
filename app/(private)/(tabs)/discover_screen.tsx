@@ -1,18 +1,4 @@
-import { EventFormData } from "@/components/events/event_form";
-import EventList from "@/components/events/event_list";
-import EventModalFormWrapper from "@/components/events/event_modal_form_wrapper";
-import EventFilterMenu from "@/components/shared/event_filter_menu";
-import ScrollableFilterButton from "@/components/shared/scrollable_filter_button";
-import { mapEventFormToDTO } from "@/domain/infrastructure/mappers/event_mapper";
-import { FilterTag } from "@/domain/model/enums/filter_tag";
-import { InterestTag } from "@/domain/model/enums/interest_tag";
-import { EventRepository } from "@/domain/repository/events/event_repository";
-import { useEventFilter } from "@/hooks/events/use_event_filter";
-import { useUserAuthStore } from "@/store/auth/use_auth_store";
-import { useEventFilterStore } from "@/store/events/use_event_filter_store";
-import { useEventsStore } from "@/store/events/use_events_store_factory";
-import { useUserEventStore } from "@/store/events/user_events_store";
-import React, { useCallback, useEffect, useState } from "react";
+import React from "react";
 import {
   Modal,
   StyleSheet,
@@ -21,94 +7,30 @@ import {
   TouchableWithoutFeedback,
   View,
 } from "react-native";
+import EventList from "@/components/events/event_list";
+import EventModalFormWrapper from "@/components/events/event_modal_form_wrapper";
+import EventFilterMenu from "@/components/shared/event_filter_menu";
+import ScrollableFilterButton from "@/components/shared/scrollable_filter_button";
+import { useDiscoverPage } from "@/hooks/events/use_discover_page";
 
 export default function DiscoverPage() {
-  // --- Global Store Data ---
-  const interestFilter = useEventFilterStore((s) => s.interestFilter);
-  const setInterest = useEventFilterStore((s) => s.setInterest);
-  const createEvent = useUserEventStore((s) => s.createEvent);
-  const logout = useUserAuthStore((s) => s.logout)
-  
-  // --- Pagination Store Hooks ---
-  const { events, loadNextPage, reset: refreshState, loading, hasMore } = useEventsStore();
-
-  // --- Local Search State (Strategy Inputs) ---
-  const [tagMode, setTagMode] = useState<FilterTag>(FilterTag.Location);
-  const [location, setLocation] = useState("Leuven"); 
-  const [date, setDate] = useState(new Date().toISOString().split('T')[0]); // YYYY-MM-DD
-
-  // --- UI State ---
-  const [showForm, setShowForm] = useState(false);
-  const [activeFilterRender, setActiveFilterRender] = useState<(() => React.ReactNode) | null>(null);
-  const [filterVisible, setFilterVisible] = useState(false);
-
-  // --- Helpers ---
-  const closeFilter = () => {
-    setFilterVisible(false);
-    setActiveFilterRender(null);
-  };
-
-  // --- Filter Menu Configuration ---
-  // We pass the setters to the hook so the menu can update our local state
-  const filterOptions = useEventFilter({
-    onClose: closeFilter,
-    onLocationChange: setLocation,
-    onDateChange: setDate,
-    onModeChange: setTagMode,
-  });
-
-  const filterButtons = Object.values(InterestTag)
-    .map(tag => ({
-      key: tag,
-      label: tag.charAt(0).toUpperCase() + tag.slice(1).toLowerCase(), // From ALL to All
-    }));
-
-  /**
-   * This function captures the current state (Location/Date + Interest Tags)
-   * and decides which Repository method to call.
-   */
-  const fetchStrategy = useCallback(async (repo: EventRepository, page: number) => {
-    // Convert 'ALL' to undefined so the repo ignores the tag filter if needed
-    const tags = interestFilter === InterestTag.ALL ? undefined : [interestFilter];
-
-    if (tagMode === FilterTag.Location) {
-       // Case A: Filter by Location AND Tags
-       return repo.getEventsByLocation(location, page, tags); 
-    } else {
-       // Case B: Filter by Date AND Tags
-       return repo.getEventsByDateAscending(date, page, tags);
-    }
-  }, [tagMode, location, date, interestFilter]);
-
-
-  // --- Effects ---
-  // Listen for changes in ANY filter (Interest, Location, Date, Mode)
-  // and trigger a fresh load.
-  useEffect(() => {
-    // 1. Reset the list (page = 0, events = [])
-    refreshState();
-    // 2. Load first page with the new strategy
-    loadNextPage(fetchStrategy);
-  }, [fetchStrategy, refreshState, loadNextPage]); 
-
-
-  // --- Handlers ---
-
-  const onFilterByInterestTagChanged = (tag: InterestTag) => {
-    setInterest(tag);
-  }
-
-  function handleFormSubmit(data: EventFormData) {
-    createEvent(mapEventFormToDTO(data));
-    setShowForm(false);
-  }
-
-  // Infinite Scroll Handler
-  const handleLoadMore = () => {
-    if (!loading && hasMore) {
-      loadNextPage(fetchStrategy);
-    }
-  };
+  const {
+    events,
+    loading,
+    interestFilter,
+    filterButtons,
+    filterOptions,
+    showForm,
+    filterVisible,
+    activeFilterRender,
+    setShowForm,
+    closeFilter,
+    onFilterByInterestTagChanged,
+    handleFormSubmit,
+    handleLoadMore,
+    handleSelectFilter,
+    logout
+  } = useDiscoverPage();
 
   return (
     <View style={styles.container}>
@@ -116,14 +38,10 @@ export default function DiscoverPage() {
       <View style={styles.headerRow}>
         <Text style={styles.header}>Discover events 🌍</Text>
 
-        <View style={{marginRight: 12, marginTop: 5}}>
-          {/* We pass the configured options to the menu */}
+        <View style={{ marginRight: 12, marginTop: 5 }}>
           <EventFilterMenu
             filterOptions={filterOptions}
-            onSelect={(render) => {
-              setActiveFilterRender(() => render);
-              setFilterVisible(true);
-            }}
+            onSelect={handleSelectFilter}
           />
         </View>
       </View>
@@ -140,21 +58,26 @@ export default function DiscoverPage() {
 
       {/* Events list */}
       <EventList
-        events={events} 
+        events={events}
         emptyComponentLabel={loading ? "Loading..." : "No events yet 😕"}
-        contentContainerStyle={{paddingTop: 0}}
+        contentContainerStyle={{ paddingTop: 0 }}
         onLoadMore={handleLoadMore}
         isLoadingMore={loading}
       />
 
       {/* Add event button */}
-      <TouchableOpacity style={styles.addButton} onPress={() => setShowForm(true)}>
+      <TouchableOpacity
+        style={styles.addButton}
+        onPress={() => setShowForm(true)}
+      >
         <Text style={styles.addButtonText}>＋</Text>
       </TouchableOpacity>
 
-
       {/* TODO: Remove this button JUST LOGOUT WHILE PROFILE NOT IMPLEMENTED */}
-      <TouchableOpacity style={styles.provisionalLogoutButton} onPress={() => logout()}>
+      <TouchableOpacity
+        style={styles.provisionalLogoutButton}
+        onPress={() => logout()}
+      >
         <Text style={styles.provisionalLogoutButtonLabel}>Logout(Test)</Text>
       </TouchableOpacity>
 
@@ -165,11 +88,12 @@ export default function DiscoverPage() {
         animationType="fade"
         onRequestClose={closeFilter}
       >
-        {/* Fullscreen backdrop (tap outside to close) */}
-        <TouchableOpacity style={styles.backdrop} activeOpacity={1} onPress={closeFilter}>
-          {/* Prevent closing when tapping inside the content */}
+        <TouchableOpacity
+          style={styles.backdrop}
+          activeOpacity={1}
+          onPress={closeFilter}
+        >
           <TouchableWithoutFeedback>
-            {/* Wrapper without background/borders: child renders its own card */}
             <View style={styles.filterOverlayWrapper}>
               {activeFilterRender && activeFilterRender()}
             </View>
@@ -195,7 +119,7 @@ const styles = StyleSheet.create({
     fontSize: 24,
     fontWeight: "bold",
     marginBottom: 12,
-    marginTop: 15
+    marginTop: 15,
   },
 
   headerRow: {

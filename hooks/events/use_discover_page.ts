@@ -1,0 +1,118 @@
+import { useState, useCallback, useEffect } from "react";
+import { EventRepository } from "@/domain/repository/events/event_repository";
+import { InterestTag } from "@/domain/model/enums/interest_tag";
+import { FilterTag } from "@/domain/model/enums/filter_tag";
+import { EventFormData } from "@/components/events/event_form";
+import { mapEventFormToDTO } from "@/domain/infrastructure/mappers/event_mapper";
+import { useEventFilter } from "@/hooks/events/use_event_filter";
+import { useEventFilterStore } from "@/store/events/use_event_filter_store";
+import { useUserEventStore } from "@/store/events/user_events_store";
+import { useUserAuthStore } from "@/store/auth/use_auth_store";
+import { useEventsStore } from "@/store/events/use_events_store_factory";
+
+export const useDiscoverPage = () => {
+    // --- Global Store Data ---
+    const interestFilter = useEventFilterStore((s) => s.interestFilter);
+    const setInterest = useEventFilterStore((s) => s.setInterest);
+    const createEvent = useUserEventStore((s) => s.createEvent);
+    const logout = useUserAuthStore((s) => s.logout);
+
+    // --- Pagination Store Hooks ---
+    const { events, loadNextPage, reset: refreshState, loading, hasMore } = useEventsStore();
+
+    // --- Local Search State (Strategy Inputs) ---
+    const [tagMode, setTagMode] = useState<FilterTag>(FilterTag.Location);
+    const [location, setLocation] = useState("Leuven");
+    const [date, setDate] = useState(new Date().toISOString().split('T')[0]); // YYYY-MM-DD
+
+    // --- UI State ---
+    const [showForm, setShowForm] = useState(false);
+    const [activeFilterRender, setActiveFilterRender] = useState<(() => React.ReactNode) | null>(null);
+    const [filterVisible, setFilterVisible] = useState(false);
+
+    // --- Helpers ---
+    const closeFilter = () => {
+        setFilterVisible(false);
+        setActiveFilterRender(null);
+    };
+
+    // --- Filter Menu Configuration ---
+    const filterOptions = useEventFilter({
+        onClose: closeFilter,
+        onLocationChange: setLocation,
+        onDateChange: setDate,
+        onModeChange: setTagMode,
+    });
+
+    const filterButtons = Object.values(InterestTag).map((tag) => ({
+        key: tag,
+        label: tag.charAt(0).toUpperCase() + tag.slice(1).toLowerCase(),
+    }));
+
+    /**
+     * Captures current state (Location/Date + Interest Tags) to decide Repository method.
+     */
+    const fetchStrategy = useCallback(
+        async (repo: EventRepository, page: number) => {
+            const tags = interestFilter === InterestTag.ALL ? undefined : [interestFilter];
+
+            if (tagMode === FilterTag.Location) {
+                return repo.getEventsByLocation(location, page, tags);
+            } else {
+                return repo.getEventsByDateAscending(date, page, tags);
+            }
+        },
+        [tagMode, location, date, interestFilter]
+    );
+
+    // --- Effects ---
+    // Trigger reload on filter change
+    useEffect(() => {
+        refreshState();
+        loadNextPage(fetchStrategy);
+    }, [fetchStrategy, refreshState, loadNextPage]);
+
+    // --- Handlers ---
+    const onFilterByInterestTagChanged = (tag: InterestTag) => {
+        setInterest(tag);
+    };
+
+    const handleFormSubmit = (data: EventFormData) => {
+        createEvent(mapEventFormToDTO(data));
+        setShowForm(false);
+    };
+
+    const handleLoadMore = () => {
+        if (!loading && hasMore) {
+            loadNextPage(fetchStrategy);
+        }
+    };
+
+    const handleSelectFilter = (render: () => React.ReactNode) => {
+        setActiveFilterRender(() => render);
+        setFilterVisible(true);
+    };
+
+    return {
+        // Data
+        events,
+        loading,
+        interestFilter,
+        filterButtons,
+        filterOptions,
+        
+        // UI State
+        showForm,
+        filterVisible,
+        activeFilterRender,
+
+        // Actions
+        setShowForm,
+        closeFilter,
+        onFilterByInterestTagChanged,
+        handleFormSubmit,
+        handleLoadMore,
+        handleSelectFilter,
+        logout
+    };
+};
