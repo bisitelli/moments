@@ -1,3 +1,5 @@
+import SingleLabelForm from "@/components/shared/single_label_form";
+import { AntDesign } from "@expo/vector-icons";
 import React from "react";
 import {
   ActivityIndicator,
@@ -7,8 +9,6 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-import { AntDesign } from "@expo/vector-icons";
-import SingleLabelForm from "@/components/shared/single_label_form";
 
 interface AuthFormViewProps {
   title?: string;
@@ -18,7 +18,8 @@ interface AuthFormViewProps {
   emptyFieldMessage?: string;
   showGoogleButton?: boolean;
   showFooter?: boolean;              
-  isLoading?: boolean;
+  isLoginLoading?: boolean;
+  isExternalLoginLoading?: boolean;
   onSubmit: (email: string) => void;
   onGooglePress?: () => void;
   onSignUpPress?: () => void;
@@ -34,7 +35,8 @@ export default function AuthFormView({
   emptyFieldMessage = "Email field is required",
   showGoogleButton = true,
   showFooter = true,                
-  isLoading = false,
+  isLoginLoading = false,
+  isExternalLoginLoading = false,
   onSubmit,
   onGooglePress,
   onSignUpPress,
@@ -54,9 +56,16 @@ export default function AuthFormView({
             style={styles.googleBtn}
             onPress={onGooglePress}
             activeOpacity={0.9}
+            disabled={isExternalLoginLoading}
           >
-            <AntDesign name="google" size={20} color={"#2e64e5"} />
-            <Text style={styles.googleBtnText}>Continue with Google</Text>
+            {isExternalLoginLoading ? (
+              <ActivityIndicator color={"#2e64e5"} />
+            ) : (
+              <>
+                <AntDesign name="google" size={20} color={"#2e64e5"} />
+                <Text style={styles.googleBtnText}>Continue with Google</Text>
+              </>
+            )}
           </TouchableOpacity>
 
           {/* Divider */}
@@ -76,7 +85,7 @@ export default function AuthFormView({
         keyboardType={keyboardType}
         onEmptyFormSubmitedMessage={emptyFieldMessage}
         submitLabel={submitLabel}
-        loading={isLoading}
+        loading={isLoginLoading}
         renderLoading={() => (
           <View>
             <ActivityIndicator color={"#fff"} />
@@ -122,6 +131,7 @@ const styles = StyleSheet.create({
   googleBtn: {
     flexDirection: "row",
     alignItems: "center",
+    justifyContent: "center", // Centra el contenido (loader o texto)
     gap: 10,
     backgroundColor: "#ffffff",
     borderRadius: 12,

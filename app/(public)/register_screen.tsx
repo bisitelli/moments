@@ -29,7 +29,7 @@ export default function RegisterScreen() {
         submitLabel="Continue with registration"
         emptyFieldMessage="Email field is required"
         showGoogleButton={false}
-        isLoading={isLoading}
+        isLoginLoading={isLoading}
         onSubmit={handleEmailSubmit}
         onGooglePress={() => router.push("/verify_email_code_screen")}
         showFooter={false}

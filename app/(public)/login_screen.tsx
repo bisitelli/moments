@@ -3,7 +3,8 @@ import { useLoginViewModel } from "@/hooks/auth/use_login_view_model";
 
 export default function LoginScreen() {
   const { 
-    isLoading, 
+    isLoginLoading,
+    isExternalLoginLoading, 
     handleEmailSubmit, 
     handleGooglePress, 
     onSignUpPress,
@@ -18,7 +19,8 @@ export default function LoginScreen() {
       emptyFieldMessage="Email field is required"
       
       // Props mapped from ViewModel
-      isLoading={isLoading}
+      isLoginLoading={isLoginLoading}
+      isExternalLoginLoading={isExternalLoginLoading}
       showGoogleButton={true}
       
       // Actions

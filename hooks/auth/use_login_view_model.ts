@@ -9,23 +9,22 @@ export const useLoginViewModel = () => {
   // Store Selectors
   const loginUser = useUserAuthStore((state) => state.requestLoginEmail);
   const externalLogin = useUserAuthStore((state) => state.requestExternalLogin);
-  const isLoading = useUserAuthStore((state) => state.isLoginLoading);
-
-  // Helper for errors
-  const handleLoginError = () => {
-    // Get the latest error from state or default message
-    const errorMsg = useUserAuthStore.getState().errorLogin || "Unknown error";
-    showErrorTop(`Login failed: ${errorMsg}`);
-  };
+  const isLoginLoading = useUserAuthStore((state) => state.isLoginLoading);
+  const isExternalLoginLoading = useUserAuthStore((state) => state.isExternalLoginLoading);
 
   // --- Email Logic ---
   const handleEmailSubmit = async (email: string) => {
     const success = await loginUser(email);
 
     if (success) {
+
       router.push("/(public)/verify_email_code_screen");
+
     } else {
-      handleLoginError();
+
+      const errorMsg = useUserAuthStore.getState().errorLogin || "Unknown error";
+      showErrorTop(`Login failed: ${errorMsg}`);
+
     }
   };
 
@@ -34,12 +33,14 @@ export const useLoginViewModel = () => {
     const success = await externalLogin(idToken);
     
     if (success) {
-       // Logic after success Google Login (e.g., go to Home)
-       // router.replace("/(tabs)/home"); 
-       console.log("Google Login Success");
+      // Logic after success Google Login 
+      router.push("/(private)/(tabs)/discover_screen"); 
+
     } else {
-       handleLoginError();
+      const errorMsg = useUserAuthStore.getState().errorExternalLogin || "Unknown error";
+      showErrorTop(`Login failed: ${errorMsg}`);
     }
+
   };
 
   const handleExternalFailed = (error: any) => {
@@ -49,14 +50,14 @@ export const useLoginViewModel = () => {
 
   // --- Initialize Google Hook ---
   // We pass the callbacks defined above
-  const { promptAsync, request } = useGoogleAuthRedirection(
+  const { promptAsync } = useGoogleAuthRedirection(
     handleExternalSuccess, 
     handleExternalFailed
   );
 
   return {
-    isLoading,
-    isGoogleButtonDisabled: !request,
+    isLoginLoading: isLoginLoading,
+    isExternalLoginLoading: isExternalLoginLoading,
     handleEmailSubmit,
     handleGooglePress: () => promptAsync(),
     onSignUpPress: () => router.push("/(public)/register_screen"),

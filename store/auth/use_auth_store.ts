@@ -17,6 +17,9 @@ interface UserAuthStore {
   errorLogin: string | null;
   isLoginLoading: boolean;
 
+  errorExternalLogin: string | null;
+  isExternalLoginLoading: boolean;
+
   errorRegister: string | null;
   isRegisterLoading: boolean;
 
@@ -44,6 +47,9 @@ export const useUserAuthStore = create<UserAuthStore>((set, get) => ({
   
   errorLogin: null,
   isLoginLoading: false,
+
+  errorExternalLogin: null,
+  isExternalLoginLoading: false,
 
   errorCode: null,
   isLoadingCode: false,
@@ -105,28 +111,32 @@ export const useUserAuthStore = create<UserAuthStore>((set, get) => ({
 
   requestExternalLogin: async (idToken: string) => {
 
-    if (idToken.trim.length === 0) return false
+    if (idToken.trim().length === 0) return false
 
     const state = get()
     
-    if (state.isLoginLoading) return false
+    if (state.isExternalLoginLoading) {
+      set({ errorExternalLogin: "Request already in process" })
+      return false
+    }
 
-    set({ isLoginLoading: true, errorLogin: null })
+    set({ isExternalLoginLoading: true, errorExternalLogin: null })
 
     // Validate the token with the backend
     try {
 
       // repo request
-      const response = await container.authRepository.externalLogin({ idToken })
+      const response = await container.authRepository.externalLogin({ token: idToken })
       state.setUserAuthenticated(response)
 
+      set({ isExternalLoginLoading: false })
       return true
 
     } catch (error: unknown){
 
       set({
-        errorLogin: getErrorMessage(error),
-        isLoginLoading: false,
+        errorExternalLogin: getErrorMessage(error),
+        isExternalLoginLoading: false,
         authStatus: AuthStatus.NOT_AUTHENTICATED
       })
 
@@ -142,7 +152,10 @@ export const useUserAuthStore = create<UserAuthStore>((set, get) => ({
   requestLoginEmail: async (email: string) => {
     const state = get();
 
-    if (state.isLoginLoading) return false
+    if (state.isLoginLoading) {
+      state.setLoginError("Request already in process")
+      return false
+    }
 
     try {
       set({ isLoginLoading: true, errorLogin: null });
@@ -168,7 +181,10 @@ export const useUserAuthStore = create<UserAuthStore>((set, get) => ({
 
     const state = get()
 
-    if (state.isLoadingCode) return false
+    if (state.isLoadingCode) {
+      state.setCodeError("Verification request already in process")
+      return false
+    }
 
     if (!state.user) {
       set({ errorCode: "No email found. Please restart login." });
@@ -185,6 +201,8 @@ export const useUserAuthStore = create<UserAuthStore>((set, get) => ({
         .authRepository.verifyEmailCode(code, request);
 
       state.setUserAuthenticated(resp)
+
+      set({ isLoadingCode: false })
       
       return true
 
@@ -202,7 +220,10 @@ export const useUserAuthStore = create<UserAuthStore>((set, get) => ({
     try {
       const state = get()
 
-      if (state.isRegisterLoading) return false
+      if (state.isRegisterLoading) {
+        set({ errorRegister: "Register request already in process" })
+        return false
+    }
 
       set({ isRegisterLoading: true, errorRegister: null });
 
@@ -263,9 +284,6 @@ export const useUserAuthStore = create<UserAuthStore>((set, get) => ({
 
     set({
       authStatus: AuthStatus.AUTHENTICATED,
-      errorCode: null,
-      isLoadingCode: false
     });
-
   }
 }));

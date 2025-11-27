@@ -25,17 +25,21 @@ export const useGoogleAuthRedirection = (
       // check if users' device has google play services
       await GoogleSignin.hasPlayServices();
 
+      // Logout each request for reset the auth status
+      // and always display the email selection form
+      try {
+        await GoogleSignin.signOut();
+      } catch (e) {
+        // Ignores in case of error
+      }
+
       // initiates signIn process
       const response = await GoogleSignin.signIn();
-
-      // Agrega esta línea para ver el error real en la terminal
-      console.log(JSON.stringify(response, null, 2));
 
       // retrieve user data
       const { idToken } = response.data ?? {};
 
       if (idToken) {
-        console.log("ID TOKEN: " + idToken)
         await onLoginSuccess(idToken);
       } else {
         onLoginFailed("No ID Token found");
@@ -64,6 +68,5 @@ export const useGoogleAuthRedirection = (
     }
   };
 
-  // Return the trigger function. 'request' state is no longer needed in the native flow.
   return { promptAsync };
 }

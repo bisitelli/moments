@@ -30,7 +30,7 @@ export default function VerifyEmailCodeScreen() {
         submitLabel="Veritfy Code"
         emptyFieldMessage="Code field is required"
         showGoogleButton={false}
-        isLoading={isLoading}
+        isLoginLoading={isLoading}
         onSubmit={handleCodeSubmit}
         formLabel="Code"
         keyboardType="number-pad"

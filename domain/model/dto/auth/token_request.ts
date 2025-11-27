@@ -1,5 +1,5 @@
 
 
 export interface TokenRequest {
-    idToken: string
+    token: string
 }

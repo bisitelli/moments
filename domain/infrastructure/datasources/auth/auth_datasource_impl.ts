@@ -3,12 +3,12 @@
 // This layer is responsible for building endpoints and passing the correct auth flag.
 // Do not add domain logic here.
 
-import { ApiService } from "../../../services/api_service";
+import { AuthDataSource } from "@/domain/datasources/auth/auth_datasource";
+import { TokenRequest } from "@/domain/model/dto/auth/token_request";
 import { RefreshTokenRequest } from "../../../model/dto/auth/refresh_token_auth_request";
 import { UserAuthRequest } from "../../../model/dto/auth/user_auth_request";
 import { UserAuthResponse } from "../../../model/dto/auth/user_auth_response";
-import { AuthDataSource } from "@/domain/datasources/auth/auth_datasource";
-import { TokenRequest } from "@/domain/model/dto/auth/token_request";
+import { ApiService } from "../../../services/api_service";
 
 export class AuthDataSourceImpl implements AuthDataSource {
   constructor(private readonly api: ApiService) {}
