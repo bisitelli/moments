@@ -84,7 +84,7 @@ export class EventDataSourceImpl implements EventDataSource {
   }
 
   async getEventsByDateAndTags(eventDateISO: string, tags: InterestTag[], page: number): Promise<EventListRestult> {
-    const response = await this.api.get<PaginatedResponse<EventResponseDTO>>(`/events/by-date-and-tags`, {
+    const response = await this.api.get<PaginatedResponse<EventResponseDTO>>(`/events/by-date-and-interests`, {
       eventDate: eventDateISO,
       tags: tags,
       page: page,
@@ -94,7 +94,7 @@ export class EventDataSourceImpl implements EventDataSource {
   }
 
   async getEventsByLocationAndTags(city: string, tags: InterestTag[], page: number): Promise<EventListRestult> {
-    const response = await this.api.get<PaginatedResponse<EventResponseDTO>>(`/events/by-location-and-tags`, {
+    const response = await this.api.get<PaginatedResponse<EventResponseDTO>>(`/events/by-location-and-interests`, {
       city,
       tags: tags,
       page: page,
