@@ -3,61 +3,125 @@ import {
     Text,
     FlatList,
     TouchableOpacity,
-    StyleSheet
+    StyleSheet,
+    ActivityIndicator,
+    Image,
+    RefreshControl
 } from "react-native";
 import { useRouter } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { useUserChatsStore } from "@/store/chat/use_user_chats_store";
+import { useCallback } from "react";
+import { useFocusEffect } from "@react-navigation/native";
+import { UserChatsView } from "@/domain/model/entities/chat/user_chat_view";
+import { ChatMessage } from "@/domain/model/entities/chat/chat_message";
 
 export default function ChatsScreen() {
     const router = useRouter();
+    
+    const { 
+        chats, 
+        isLoading, 
+        fetchUserChats, 
+        refreshUserChats, // Ensure this exists in your store update
+        hasMore
+    } = useUserChatsStore();
 
-    const conversations = [
-        {
-            id: "550e8400-e29b-41d4-a716-446655440000",
-            name: "Hiking",
-            lastMessage: "Are you coming tomorrow?",
-            time: "14:32",
-        },
-        {
-            id: "550e8400-e29b-41d4-a716-446655440002",
-            name: "Studying",
-            lastMessage: "Nice! Let's do it.",
-            time: "12:11",
-        },
-        {
-            id: "550e8400-e29b-41d4-a716-446655440004",
-            name: "Football",
-            lastMessage: "See you soon 😊",
-            time: "09:05",
-        }
-    ];
-    // lets add id later for backend
-    const openChat = (chatId: string) => {
+    // Reload list logic
+    useFocusEffect(
+        useCallback(() => {
+            // If list is empty, fetch normally (shows big loader)
+            if (chats.length === 0) {
+                fetchUserChats();
+            } else {
+                // If list exists, refresh silently/background (no white flash)
+                refreshUserChats();
+            }
+        }, [])
+    );
+
+    const openChat = (chatId: string, eventName: string) => {
         router.push({
             pathname: "/(private)/chat/[id]",
-            params: { id: chatId },
+            params: { id: chatId, name: eventName },
         });
     };
 
-    const renderItem = ({ item }: { item: any }) => (
-        <TouchableOpacity style={styles.row} onPress={() => openChat(item.id)}>
-            <View style={styles.textArea}>
-                <Text style={styles.name}>{item.name}</Text>
-                <Text style={styles.lastMessage}>{item.lastMessage}</Text>
-            </View>
-            <Text style={styles.time}>{item.time}</Text>
-        </TouchableOpacity>
-    );
+    const formatTime = (isoString?: string) => {
+        if (!isoString) return "";
+        try {
+            const date = new Date(isoString);
+            return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        } catch {
+            return "";
+        }
+    };
+
+    const renderItem = ({ item }: { item: UserChatsView }) => {
+        const imageUri = item.eventImage ?? "";
+
+        return (
+            <TouchableOpacity style={styles.row} onPress={() => openChat(item.id, item.eventName)}>
+                {imageUri !== "" ? (
+                    <Image source={{ uri: imageUri }} style={styles.avatar} />
+                ) : (
+                    <View style={[styles.avatar, styles.placeholderAvatar]}>
+                        <Text style={styles.placeholderText}>
+                            {item.eventName ? item.eventName.charAt(0).toUpperCase() : "?"}
+                        </Text>
+                    </View>
+                )}
+
+                <View style={styles.textArea}>
+                    <Text style={styles.name}>{item.eventName}</Text>
+                    <Text style={styles.lastMessage} numberOfLines={1}>
+                        {item.lastMessage?.content || "No messages yet"}
+                    </Text>
+                </View>
+                
+                <Text style={styles.time}>
+                    {formatTime(item.lastMessage?.sentAt)}
+                </Text>
+            </TouchableOpacity>
+        );
+    };
 
     return (
         <View style={styles.container}>
-            <SafeAreaView>
-                <FlatList
-                    data={conversations}
-                    keyExtractor={(item) => item.id}
-                    renderItem={renderItem}
-                    contentContainerStyle={{ paddingVertical: 12 }}
-                /></SafeAreaView>
+            <SafeAreaView edges={['top']} style={{ flex: 1 }}>
+                {/* Only show full screen loader if we have NO data */}
+                {isLoading && chats.length === 0 ? (
+                    <View style={styles.center}>
+                        <ActivityIndicator size="large" color="#000" />
+                    </View>
+                ) : (
+                    <FlatList
+                        data={chats}
+                        keyExtractor={(item: UserChatsView) => String(item.id)}
+                        renderItem={renderItem}
+                        contentContainerStyle={{ paddingVertical: 12 }}
+                        refreshControl={
+                            <RefreshControl 
+                                refreshing={isLoading} 
+                                onRefresh={refreshUserChats} 
+                            />
+                        }
+                        onEndReached={() => {
+                            if (chats.length === 0) return
+                            // Prevent fetching if already loading or no more data
+                            if (chats.length > 0 && hasMore && !isLoading) {
+                                fetchUserChats();
+                            }
+                        }}
+                        onEndReachedThreshold={0.5}
+                        ListEmptyComponent={
+                            <View style={styles.center}>
+                                <Text style={styles.emptyText}>No conversations found</Text>
+                            </View>
+                        }
+                    />
+                )}
+            </SafeAreaView>
         </View>
     );
 }
@@ -66,6 +130,12 @@ const styles = StyleSheet.create({
     container: {
         flex: 1,
         backgroundColor: "#fff",
+    },
+    center: {
+        flex: 1,
+        justifyContent: "center",
+        alignItems: "center",
+        marginTop: 50,
     },
     row: {
         flexDirection: "row",
@@ -80,6 +150,17 @@ const styles = StyleSheet.create({
         height: 52,
         borderRadius: 26,
         marginRight: 12,
+        backgroundColor: "#e0e0e0",
+    },
+    placeholderAvatar: {
+        justifyContent: "center",
+        alignItems: "center",
+        backgroundColor: "#ddd",
+    },
+    placeholderText: {
+        fontSize: 18,
+        fontWeight: "bold",
+        color: "#555",
     },
     textArea: {
         flex: 1,
@@ -97,4 +178,8 @@ const styles = StyleSheet.create({
         fontSize: 12,
         marginLeft: 8,
     },
+    emptyText: {
+        color: "#888",
+        fontSize: 16,
+    }
 });

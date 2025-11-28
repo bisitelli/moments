@@ -1,7 +1,7 @@
-import { create } from 'zustand';
-import { ChatMessage } from '@/domain/model/entities/chat/ChatMessage';
 import { container } from '@/dependency_injection/container';
+import { ChatMessage } from '@/domain/model/entities/chat/chat_message';
 import { getErrorMessage } from '@/shared/utils/error_utils';
+import { create } from 'zustand';
 
 
 interface ChatState {
@@ -73,7 +73,6 @@ export const useChatStore = create<ChatState>((set, get) => ({
             const response = await container.chatRepository.getMessages(chatId, page);
 
             // Logic to determine if there are more pages
-
             if (page === 0) {
                 // First load: replace everything
                 setMessages(response.events);

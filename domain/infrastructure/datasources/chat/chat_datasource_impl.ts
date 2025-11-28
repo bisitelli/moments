@@ -1,26 +1,55 @@
 import { ChatDatasource } from "@/domain/datasources/chat/chat_datasource";
 import { ChatListResult } from "@/domain/model/dto/chat/chat_list_result";
+import { UserChatListResult } from "@/domain/model/dto/chat/user_chat_list_result";
+import { ChatMessage } from "@/domain/model/entities/chat/chat_message";
+import { UserChatsView } from "@/domain/model/entities/chat/user_chat_view";
+import { PaginatedResponse } from "@/domain/model/shared/paginated_response";
 import { ApiService } from "@/domain/services/api_service";
 
 export class ChatDatasourceImpl implements ChatDatasource {
     private apiService: ApiService;
     
+    // Default page sizes
+    private readonly MESSAGE_PAGE_SIZE = 30;
+    private readonly USER_CHAT_LIST_PAGE_SIZE = 10;
+
     constructor(apiService: ApiService) {
         this.apiService = apiService;
     }
-    
-    PAGE_SIZE = 30
+
+    private chatMessagesFromPaginatedResponse(response: PaginatedResponse<ChatMessage>): ChatListResult {
+        return {
+          messages: response.content,
+          hasMore: !response.last
+        };
+    }
+
+    private userChatsFromPaginatedResponse(response: PaginatedResponse<UserChatsView>): UserChatListResult {
+        return {
+          chats: response.content,
+          hasMore: !response.last 
+        };
+    }
 
     async getMessages(chatId: string, page: number): Promise<ChatListResult> {
-        // Endpoint structure based on your Spring Boot controllers
-        const endpoint = `/event/chat/${chatId}/messages`;
+        const endpoint = `/chat/${chatId}/messages`;
 
-        const response = await this.apiService.get<ChatListResult>(endpoint,{
-            size: this.PAGE_SIZE,
+        const response = await this.apiService.get<PaginatedResponse<ChatMessage>>(endpoint, {
+            size: this.MESSAGE_PAGE_SIZE,
             page: page,
-            chatId: chatId
         });
         
-        return response;
+        return this.chatMessagesFromPaginatedResponse(response);
+    }
+
+    async getUserChats(page: number): Promise<UserChatListResult> {
+        const endpoint = "/user/me/chats";
+
+        const response = await this.apiService.get<PaginatedResponse<UserChatsView>>(endpoint, {
+            page: page,
+            size: this.USER_CHAT_LIST_PAGE_SIZE
+        });
+
+        return this.userChatsFromPaginatedResponse(response);
     }
 }

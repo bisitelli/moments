@@ -1,9 +1,10 @@
 import { ChatMessageRequest } from '@/domain/model/dto/chat/chat_message_resquest';
-import { ChatMessage } from '@/domain/model/entities/chat/ChatMessage';
+import { ChatMessage } from '@/domain/model/entities/chat/chat_message';
 import { useUserAuthStore } from '@/store/auth/use_auth_store';
 import { Client } from '@stomp/stompjs';
 import { useCallback, useEffect, useRef, useState } from 'react';
 
+// Ensure polyfill is imported in root if needed for TextEncoder/Decoder
 
 export const useChatSocket = (chatId: string) => {
     const [incomingMessage, setIncomingMessage] = useState<ChatMessage | null>(null);
@@ -20,8 +21,12 @@ export const useChatSocket = (chatId: string) => {
             reconnectDelay: 5000,
             forceBinaryWSFrames: true,
             appendMissingNULLonIncoming: true,
+            
+            // Debug logs
+            // debug: (str) => console.log('STOMP: ' + str),
 
             webSocketFactory: () => {
+                // Adjust IP based on environment (10.0.2.2 for Android Emulator, LAN IP for device)
                 const url = 'ws://192.168.0.105:8082/ws-chat'; 
                 
                 // @ts-ignore
@@ -34,7 +39,8 @@ export const useChatSocket = (chatId: string) => {
         });
 
         client.onConnect = () => {
-            // Subscribing to chat topic
+            console.log(`✅ [STOMP] Connected to chat ${chatId}`);
+            
             client.subscribe(`/event/chat/${chatId}`, (message) => {
                 if (message.body) {
                     const parsedMessage: ChatMessage = JSON.parse(message.body);
@@ -43,14 +49,19 @@ export const useChatSocket = (chatId: string) => {
             });
         };
 
+        client.onWebSocketClose = () => {
+            console.log('❌ [STOMP] Connection closed');
+        };
+
         client.onStompError = (frame) => {
-            console.error('Broker error: ' + frame.headers['message']);
+            console.error('⚠️ [STOMP] Broker error: ' + frame.headers['message']);
         };
 
         client.activate();
         clientRef.current = client;
 
         return () => {
+            console.log('🔌 [STOMP] Deactivating client...');
             client.deactivate();
         };
     }, [chatId, token]);
@@ -59,10 +70,14 @@ export const useChatSocket = (chatId: string) => {
         if (clientRef.current?.connected) {
             const payload: ChatMessageRequest = { content };
             
+            console.log('📩 [STOMP] Sending message:', content);
+
             clientRef.current.publish({
                 destination: `/app/event/${chatId}/send`,
                 body: JSON.stringify(payload),
             });
+        } else {
+            console.warn('⚠️ [STOMP] Cannot send: Client not connected');
         }
     }, [chatId]);
 

@@ -1,6 +1,6 @@
-import { ChatMessage } from "../../entities/chat/ChatMessage"
+import { ChatMessage } from "../../entities/chat/chat_message"
 
 export interface ChatListResult {
-    events: ChatMessage[]
+    messages: ChatMessage[]
     hasMore: boolean
 }

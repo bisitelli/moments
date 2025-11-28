@@ -3,10 +3,11 @@ import { EventRequestDTO } from "@/domain/model/dto/events/event_request_dto";
 import { EventRepository } from "@/domain/repository/events/event_repository";
 import { getErrorMessage } from "@/shared/utils/error_utils";
 import { container } from "@/dependency_injection/container";
+import { EventItem } from "@/domain/model/entities/events/event_item";
 
 export interface UserEventsStore {
   // Data (Added myEvents to store the actual list)
-  myEvents: any[]; // Replace 'any' with EventResponseDTO
+  myEvents: EventItem[]; // Replace 'any' with EventResponseDTO
   eventRepository: EventRepository;
 
   // Loading States

@@ -1,14 +1,16 @@
-
-import { ChatMessage } from '@/domain/model/entities/chat/ChatMessage';
-import { useChatSocket } from '@/hooks/auth/use_chat_websocket';
+import { ChatMessage } from '@/domain/model/entities/chat/chat_message';
+import { useChatSocket } from '@/hooks/chat/use_chat_websocket';
+import { useChatStore } from '@/store/chat/use_chat_store';
 import { useHeaderHeight } from '@react-navigation/elements';
 import { useLocalSearchParams } from 'expo-router';
 import { useEffect, useRef, useState } from 'react';
 import {
+    ActivityIndicator,
     FlatList,
     Image,
     KeyboardAvoidingView,
     Platform,
+    RefreshControl,
     StyleSheet,
     Text,
     TextInput,
@@ -21,33 +23,49 @@ export default function ConversationScreen() {
     const { id } = useLocalSearchParams();
     const chatId = Array.isArray(id) ? id[0] : id;
 
-    // 1. Layout Hooks
+    // Layout Hooks
     const insets = useSafeAreaInsets();
     const headerHeight = useHeaderHeight();
 
-    // 2. Socket Hook
+    // Socket Hook
     const { incomingMessage, sendMessage } = useChatSocket(chatId);
 
-    // Typed State using ChatMessage entity
-    const [messages, setMessages] = useState<ChatMessage[]>([]);
-    
+    // Global State (Zustand)
+    const { 
+        messages, 
+        fetchHistory, 
+        addMessage, 
+        clearChat, 
+        isLoading 
+    } = useChatStore();
+
     const [inputText, setInputText] = useState("");
     const flatListRef = useRef<FlatList>(null);
 
-    // 3. Effect: Listen for new messages from Socket
+    // Effect: Initial Load & Cleanup
+    useEffect(() => {
+        // Load initial history (Page 0)
+        fetchHistory(chatId);
+        
+        // Cleanup store when leaving the screen
+        return () => {
+            clearChat();
+        };
+    }, [chatId]);
+
+    // Effect: Listen for new messages from Socket
     useEffect(() => {
         if (incomingMessage) {
-            // Direct update since incomingMessage matches ChatMessage interface
-            setMessages((prev) => [...prev, incomingMessage]);
+            addMessage(incomingMessage);
             
-            // Scroll to bottom
+            // Scroll to bottom on new message
             setTimeout(() => {
                 flatListRef.current?.scrollToEnd({ animated: true });
             }, 100);
         }
     }, [incomingMessage]);
 
-    // 4. Send Handler
+    // Send Handler
     const handleSendMessage = () => {
         if (inputText.trim().length === 0) return;
 
@@ -65,7 +83,6 @@ export default function ConversationScreen() {
                     isMe ? styles.myMessage : styles.otherMessage,
                 ]}
             >
-                {/* Avatar: Show only for others if URL exists */}
                 {!isMe && item.senderProfilePictureUrl && (
                     <Image 
                         source={{ uri: item.senderProfilePictureUrl }} 
@@ -83,28 +100,46 @@ export default function ConversationScreen() {
     return (
         <KeyboardAvoidingView
             style={styles.container}
-            // Fix: Offset by header height so keyboard doesn't hide input
             keyboardVerticalOffset={Platform.OS === "ios" ? headerHeight : 0}
             behavior={Platform.OS === "ios" ? "padding" : undefined}
         >
             <View style={{ flex: 1 }}>
-                <FlatList
-                    ref={flatListRef}
-                    data={messages}
-                    keyExtractor={(item) => item.id}
-                    renderItem={renderMessage}
-                    // Fix: Add padding bottom so last message isn't hidden
-                    contentContainerStyle={{ padding: 16, paddingBottom: 20 }}
-                    onContentSizeChange={() =>
-                        flatListRef.current?.scrollToEnd({ animated: true })
-                    }
-                />
+                {/* Initial Loading State */}
+                {isLoading && messages.length === 0 ? (
+                    <View style={styles.loadingContainer}>
+                        <ActivityIndicator size="large" color="#2e64e5" />
+                    </View>
+                ) : (
+                    <FlatList
+                        ref={flatListRef}
+                        data={messages}
+                        keyExtractor={(item) => item.id}
+                        renderItem={renderMessage}
+                        contentContainerStyle={{ padding: 16, paddingBottom: 20 }}
+                        
+                        // Pagination: Pull down to load older messages
+                        refreshControl={
+                            <RefreshControl 
+                                refreshing={isLoading} 
+                                onRefresh={() => fetchHistory(chatId)} 
+                                tintColor="#2e64e5"
+                            />
+                        }
+                        
+                        // Auto-scroll logic for new messages
+                        onContentSizeChange={() => {
+                            // Only scroll to end if we are NOT loading history (to avoid jumping when paging)
+                            if (!isLoading) {
+                               flatListRef.current?.scrollToEnd({ animated: true });
+                            }
+                        }}
+                    />
+                )}
             </View>
 
             {/* Input area */}
             <View style={[
                 styles.inputContainer,
-                // Fix: dynamic padding for Home Indicator
                 { paddingBottom: Math.max(insets.bottom, 10) }
             ]}>
                 <TextInput
@@ -126,6 +161,11 @@ const styles = StyleSheet.create({
     container: {
         flex: 1,
         backgroundColor: "#f7f7f7",
+    },
+    loadingContainer: {
+        flex: 1,
+        justifyContent: 'center',
+        alignItems: 'center',
     },
     messageContainer: {
         padding: 10,
