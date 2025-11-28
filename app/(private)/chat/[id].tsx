@@ -8,6 +8,7 @@ import {
     ActivityIndicator,
     FlatList,
     Image,
+    Keyboard,
     KeyboardAvoidingView,
     Platform,
     StyleSheet,
@@ -35,7 +36,6 @@ export default function ConversationScreen() {
         hasMore, 
         fetchHistory, 
         addMessage, 
-        clearChat, 
         isLoading 
     } = useChatStore();
 
@@ -62,6 +62,8 @@ export default function ConversationScreen() {
 
         sendMessage(inputText);
         setInputText("");
+
+        Keyboard.dismiss()
         // Scroll down
         setTimeout(() => {
                 flatListRef.current?.scrollToOffset({ offset: 0, animated: true });
@@ -69,7 +71,8 @@ export default function ConversationScreen() {
     };
 
     const renderMessage = ({ item }: { item: ChatMessage }) => {
-        const isMe = item.isMine;
+        // const isMe = item.isMine;
+        const isMe = item.isMine
 
         return (
             <View
@@ -95,11 +98,13 @@ export default function ConversationScreen() {
     return (
         <KeyboardAvoidingView
             style={styles.container}
-            keyboardVerticalOffset={Platform.OS === "ios" ? headerHeight : 0}
-            behavior={Platform.OS === "ios" ? "padding" : undefined}
+            // Use headerHeight for both platforms (fixes overlap)
+            keyboardVerticalOffset={headerHeight} 
+            // "height" works better on Android for this layout
+            behavior={Platform.OS === "ios" ? "padding" : "height"} 
         >
             <View style={{ flex: 1 }}>
-                {/* Initial Loading State */}
+                {/* ... (The rest of your list code remains exactly the same) ... */}
                 {isLoading && messages.length === 0 ? (
                     <View style={styles.loadingContainer}>
                         <ActivityIndicator size="large" color="#2e64e5" />
@@ -112,17 +117,13 @@ export default function ConversationScreen() {
                         keyExtractor={(item) => item.id}
                         renderItem={renderMessage}
                         contentContainerStyle={{ padding: 16, paddingBottom: 20 }}
-
                         onEndReached={() => {
                             if (messages.length === 0) return
-                            // Prevent fetching if already loading or no more data
                             if (messages.length > 0 && hasMore && !isLoading) {
                                 fetchHistory(chatId);
                             }
                         }}
                         onEndReachedThreshold={0.5}
-
-                         // Loading indicator for "End" (Top of screen)
                         ListFooterComponent={
                             isLoading ? <ActivityIndicator size="small" color="#999" style={{ margin: 10 }} /> : null
                         }
@@ -133,6 +134,7 @@ export default function ConversationScreen() {
             {/* Input area */}
             <View style={[
                 styles.inputContainer,
+                // 3. Ensure we keep bottom padding safe
                 { paddingBottom: Math.max(insets.bottom, 10) }
             ]}>
                 <TextInput

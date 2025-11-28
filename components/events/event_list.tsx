@@ -3,6 +3,7 @@ import { useRouter } from "expo-router";
 import {
   ActivityIndicator,
   FlatList,
+  RefreshControl,
   StyleProp,
   StyleSheet,
   Text,
@@ -21,6 +22,7 @@ type Props = {
   contentContainerStyle?: StyleProp<ViewStyle>;
   onLoadMore?: () => void; 
   isLoadingMore?: boolean; 
+  handleRefresh: () => void
 };
 
 export default function EventList({
@@ -32,6 +34,7 @@ export default function EventList({
   contentContainerStyle,
   onLoadMore,
   isLoadingMore = false,
+  handleRefresh
 }: Props) {
   const router = useRouter();
 
@@ -103,6 +106,13 @@ export default function EventList({
         { paddingTop, paddingBottom },
         contentContainerStyle,
       ]}
+
+      refreshControl={
+        <RefreshControl 
+            refreshing={(isLoadingMore && events.length > 0 ? true : false)} 
+            onRefresh={handleRefresh} 
+        />
+      }
       
       contentInsetAdjustmentBehavior="never"
       showsVerticalScrollIndicator

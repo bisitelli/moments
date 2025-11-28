@@ -93,6 +93,12 @@ export const useDiscoverPage = () => {
         setFilterVisible(true);
     };
 
+    const handleRefresh = () => {
+        if (loading) return        
+        refreshState()
+        loadNextPage(fetchStrategy)
+    }
+
     return {
         // Data
         events,
@@ -113,6 +119,7 @@ export const useDiscoverPage = () => {
         handleFormSubmit,
         handleLoadMore,
         handleSelectFilter,
-        logout
+        logout,
+        handleRefresh
     };
 };

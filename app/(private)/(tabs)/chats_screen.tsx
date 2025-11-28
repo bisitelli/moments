@@ -14,7 +14,6 @@ import { useUserChatsStore } from "@/store/chat/use_user_chats_store";
 import { useCallback } from "react";
 import { useFocusEffect } from "@react-navigation/native";
 import { UserChatsView } from "@/domain/model/entities/chat/user_chat_view";
-import { ChatMessage } from "@/domain/model/entities/chat/chat_message";
 
 export default function ChatsScreen() {
     const router = useRouter();
@@ -100,6 +99,7 @@ export default function ChatsScreen() {
                         keyExtractor={(item: UserChatsView) => String(item.id)}
                         renderItem={renderItem}
                         contentContainerStyle={{ paddingVertical: 12 }}
+                        // TODO: Delete refresh controll when implemented websocket channel
                         refreshControl={
                             <RefreshControl 
                                 refreshing={isLoading} 

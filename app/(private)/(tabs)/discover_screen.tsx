@@ -29,7 +29,8 @@ export default function DiscoverPage() {
     handleFormSubmit,
     handleLoadMore,
     handleSelectFilter,
-    logout
+    logout,
+    handleRefresh
   } = useDiscoverPage();
 
   return (
@@ -63,6 +64,7 @@ export default function DiscoverPage() {
         contentContainerStyle={{ paddingTop: 0 }}
         onLoadMore={handleLoadMore}
         isLoadingMore={loading}
+        handleRefresh={handleRefresh}
       />
 
       {/* Add event button */}

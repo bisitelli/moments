@@ -32,7 +32,7 @@ export interface EventDataSource {
   createEvent(request: EventRequestDTO): Promise<EventItem>;
 
   /** POST /api/events/participants/{participantId} (auth) */
-  subscribeToEvent(participantId: string): Promise<EventParticipant>;
+  subscribeToEvent(eventId: string): Promise<EventParticipant>;
 
   /** PUT /api/events/{eventId} (auth) */
   updateEvent(eventId: string, request: EventRequestDTO): Promise<EventItem>;

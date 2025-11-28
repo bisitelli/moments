@@ -12,16 +12,20 @@ export interface UserEventsStore {
 
   // Loading States
   loadingCreate: boolean;
-  loadingDelete: string | null;
+  loadingDelete: boolean;
+  loadingSubscribe: boolean,
+  
 
   // Error States
   errorMyEvents: string | null;
   errorCreate: string | null;
   errorDelete: string | null;
+  errorSubscribe: string | null;
 
   // Actions
   createEvent: (data: EventRequestDTO) => Promise<void>;
   deleteMyEvent: (id: string) => Promise<void>;
+  subscribeToEvent: (eventId: string) => Promise<boolean>
 }
 
 // 2. Create the store hook
@@ -31,10 +35,13 @@ export const useUserEventStore = create<UserEventsStore>((set, get) => ({
   eventRepository: container.eventRepository,
   
   loadingCreate: false,
-  loadingDelete: null,
+  loadingDelete: false,
+  loadingSubscribe: false,
+
   errorMyEvents: null,
   errorCreate: null,
   errorDelete: null,
+  errorSubscribe: null,
 
   createEvent: async (data: EventRequestDTO) => {
     set({ loadingCreate: true, errorCreate: null });
@@ -52,17 +59,43 @@ export const useUserEventStore = create<UserEventsStore>((set, get) => ({
   },
 
   deleteMyEvent: async (id: string) => {
-    set({ loadingDelete: id, errorDelete: null });
+    set({ loadingDelete: true, errorDelete: null });
     try {
       await get().eventRepository.deleteEvent(id);
       
       // Functional update to remove the event from the list
       set((state) => ({
-        loadingDelete: null,
+        loadingDelete: false,
         myEvents: state.myEvents.filter((e) => e.id !== id)
       }));
     } catch (err: unknown) {
-      set({ errorDelete: getErrorMessage(err), loadingDelete: null });
+      set({ errorDelete: getErrorMessage(err), loadingDelete: false });
     }
   },
+
+  subscribeToEvent: async (eventId: string) => {
+
+    const state = get()
+
+    if (state.loadingSubscribe) {
+      set({ errorSubscribe: "Request already done"})
+      return false
+    }
+
+    set({ loadingSubscribe: true, errorSubscribe: null });
+    try {
+      // Assuming the repository method exists
+      await get().eventRepository.subscribeToEvent(eventId);
+      
+      set({ loadingSubscribe: false });
+
+      return true
+
+    } catch (err: unknown) {
+      set({ errorSubscribe: getErrorMessage(err), loadingSubscribe: false });
+      return false
+    }
+  }
+
+
 }));

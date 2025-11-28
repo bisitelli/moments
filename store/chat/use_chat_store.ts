@@ -82,6 +82,7 @@ export const useChatStore = create<ChatState>((set, get) => ({
 
         try {
             const response = await container.chatRepository.getMessages(chatId, page);
+            console.log(JSON.stringify(response.messages, null, 2))
 
             // Logic to determine if there are more pages
             if (page === 0) {

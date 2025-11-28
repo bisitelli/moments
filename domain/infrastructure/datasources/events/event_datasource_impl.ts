@@ -110,10 +110,10 @@ export class EventDataSourceImpl implements EventDataSource {
     return mapEventToFrontend(response);
   }
 
-  /** POST /api/events/participants/{participantId} (auth) */
-  async subscribeToEvent(participantId: string): Promise<EventParticipant> {
+  /** POST /api/events/participants/{eventId} (auth) */
+  async subscribeToEvent(eventId: string): Promise<EventParticipant> {
     const response = await this.api.post<EventParticipantResponseDTO>(
-      `/events/participants/${participantId}`,
+      `/events/participants/${eventId}`,
       undefined,
       true
     );

@@ -1,4 +1,6 @@
+import { showErrorTop, showMessage } from "@/shared/utils/show_toast_message";
 import { useEventDetailStore } from "@/store/events/use_event_details_store";
+import { useUserEventStore } from "@/store/events/user_events_store";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useEffect, useRef } from "react";
 import { Animated } from "react-native";
@@ -21,6 +23,10 @@ export const useEventDetailPage = () => {
         isLoadingParticipants 
     } = useEventDetailStore();
 
+    const subscribeToEvent = useUserEventStore((state) => state.subscribeToEvent)
+    const loadingSubscription = useUserEventStore((state) => state.loadingSubscribe)
+    const errorSubscribe = useUserEventStore((state) => state.errorSubscribe)
+
     // --- Animation logic ---
     // Reference to the scroll position
     const scrollY = useRef(new Animated.Value(0)).current;
@@ -42,8 +48,17 @@ export const useEventDetailPage = () => {
     }, [id, fetchEventById]);
 
     // --- Handlers ---
-    const handleJoinEvent = () => {
-        console.log("User wants to join event:", id);
+    const handleJoinEvent = async () => {
+        if (loadingSubscription) return
+
+        const success = await subscribeToEvent(event!.id)
+
+        if (success) {
+            showMessage("Subscription completed!")
+            return
+        }
+
+        showErrorTop("Error while subscribing: " + errorSubscribe)
     };
     
     const handleProfileNavigation = (userId: string) => {
