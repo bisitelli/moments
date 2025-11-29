@@ -63,7 +63,6 @@ export default function ConversationScreen() {
         sendMessage(inputText);
         setInputText("");
 
-        Keyboard.dismiss()
         // Scroll down
         setTimeout(() => {
                 flatListRef.current?.scrollToOffset({ offset: 0, animated: true });
@@ -89,7 +88,7 @@ export default function ConversationScreen() {
                 )}
                 
                 <Text style={[styles.messageText, isMe ? styles.myText : styles.otherText]}>
-                    {item.content}
+                    {isMe ? item.content + " (me)" : item.content + "(" + item.senderName + ")" } 
                 </Text>
             </View>
         );

@@ -4,7 +4,6 @@ import { useUserAuthStore } from '@/store/auth/use_auth_store';
 import { Client } from '@stomp/stompjs';
 import { useCallback, useEffect, useRef, useState } from 'react';
 
-// Ensure polyfill is imported in root if needed for TextEncoder/Decoder
 
 export const useChatSocket = (chatId: string) => {
     const [incomingMessage, setIncomingMessage] = useState<ChatMessage | null>(null);
