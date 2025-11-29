@@ -1,5 +1,5 @@
 import { ChatMessage } from '@/domain/model/entities/chat/chat_message';
-import { useChatSocket } from '@/hooks/chat/use_chat_websocket';
+import { useChatMessageSocket } from '@/hooks/chat/use_chat_messages_socket';
 import { useChatStore } from '@/store/chat/use_chat_messages_store';
 import { useHeaderHeight } from '@react-navigation/elements';
 import { useLocalSearchParams } from 'expo-router';
@@ -8,7 +8,6 @@ import {
     ActivityIndicator,
     FlatList,
     Image,
-    Keyboard,
     KeyboardAvoidingView,
     Platform,
     StyleSheet,
@@ -28,7 +27,7 @@ export default function ConversationScreen() {
     const headerHeight = useHeaderHeight();
 
     // Socket Hook
-    const { incomingMessage, sendMessage } = useChatSocket(chatId);
+    const { incomingMessage, sendMessage } = useChatMessageSocket(chatId);
 
     // Global State (Zustand)
     const { 
