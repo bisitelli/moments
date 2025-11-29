@@ -1,6 +1,6 @@
 import { ChatMessage } from '@/domain/model/entities/chat/chat_message';
 import { useChatSocket } from '@/hooks/chat/use_chat_websocket';
-import { useChatStore } from '@/store/chat/use_chat_store';
+import { useChatStore } from '@/store/chat/use_chat_messages_store';
 import { useHeaderHeight } from '@react-navigation/elements';
 import { useLocalSearchParams } from 'expo-router';
 import { useEffect, useRef, useState } from 'react';
@@ -36,7 +36,8 @@ export default function ConversationScreen() {
         hasMore, 
         fetchHistory, 
         addMessage, 
-        isLoading 
+        isLoading,
+        clearChat
     } = useChatStore();
 
     const [inputText, setInputText] = useState("");
@@ -44,6 +45,10 @@ export default function ConversationScreen() {
 
     // Effect: Initial Load & Cleanup
     useEffect(() => {
+
+        // Clear state
+        clearChat()
+
         // Load history 
         fetchHistory(chatId);
 

@@ -8,7 +8,6 @@ interface ChatState {
     messages: ChatMessage[];
     isLoading: boolean;
     error: string | null
-    lastId: string | null
     // Pagination state
     page: number;
     hasMore: boolean;
@@ -32,7 +31,6 @@ export const useChatStore = create<ChatState>((set, get) => ({
     page: 0,
     hasMore: true,
     error: null,
-    lastId: null,
 
     setMessages: (messages) => set({ messages }),
 
@@ -64,21 +62,12 @@ export const useChatStore = create<ChatState>((set, get) => ({
     }),
 
     fetchHistory: async (chatId: string) => {
-        let { page, hasMore, isLoading, lastId } = get();
-        
-        // If it's the first state & chat id has changed
-        if ( lastId && lastId != chatId) {
-            get().clearChat()
-            // Update local variables
-            page = 0; 
-            hasMore = true;
-            isLoading = false;
-        }
+        const { page, hasMore, isLoading } = get();
 
         // Guard clauses to prevent double fetching or fetching when done
         if (isLoading || (!hasMore && page !== 0)) return;
 
-        set({ isLoading: true, lastId: chatId });
+        set({ isLoading: true });
 
         try {
             const response = await container.chatRepository.getMessages(chatId, page);
