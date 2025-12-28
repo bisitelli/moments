@@ -93,6 +93,12 @@ export default function ChatsScreen() {
     return (
         <View style={styles.container}>
             <SafeAreaView edges={['top']} style={{ flex: 1 }}>
+                
+                {/* Header / AppBar */}
+                <View style={styles.headerContainer}>
+                    <Text style={styles.headerTitle}>Chats</Text>
+                </View>
+
                 {/* Only show full screen loader if we have NO data */}
                 {isLoading && chats.length === 0 ? (
                     <View style={styles.center}>
@@ -128,6 +134,18 @@ const styles = StyleSheet.create({
     container: {
         flex: 1,
         backgroundColor: "#fff",
+    },
+    // New Header Styles
+    headerContainer: {
+        paddingHorizontal: 16,
+        paddingVertical: 12,
+        backgroundColor: "#fff",
+        borderBottomWidth: 1,
+        borderBottomColor: "#eee",
+    },
+    headerTitle: {
+        fontSize: 24,
+        fontWeight: "bold",
     },
     center: {
         flex: 1,
