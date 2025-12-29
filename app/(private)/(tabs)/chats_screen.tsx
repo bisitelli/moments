@@ -44,10 +44,14 @@ export default function ChatsScreen() {
         }, [chats.length]) // Dependency ensures we distinguish between initial fetch and refresh
     );
 
-    const openChat = (chatId: string, eventName: string) => {
+    const openChat = (chatId: string, eventName: string, eventImage?: string) => {
         router.push({
             pathname: "/(private)/chat/[id]",
-            params: { id: chatId, name: eventName },
+            params: {
+                id: chatId,
+                name: eventName,
+                image: eventImage
+            },
         });
     };
 
@@ -65,7 +69,7 @@ export default function ChatsScreen() {
         const imageUri = item.eventImage ?? "";
 
         return (
-            <TouchableOpacity style={styles.row} onPress={() => openChat(item.id, item.eventName)}>
+            <TouchableOpacity style={styles.row} onPress={() => openChat(item.id, item.eventName, item.eventImage)}>
                 {imageUri !== "" ? (
                     <Image source={{ uri: imageUri }} style={styles.avatar} />
                 ) : (
