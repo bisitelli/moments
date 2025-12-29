@@ -15,7 +15,6 @@ export const useDiscoverPage = () => {
     const interestFilter = useEventFilterStore((s) => s.interestFilter);
     const setInterest = useEventFilterStore((s) => s.setInterest);
     const createEvent = useUserEventStore((s) => s.createEvent);
-    const logout = useUserAuthStore((s) => s.logout);
 
     // --- Pagination Store Hooks ---
     const { events, loadNextPage, reset: refreshState, loading, hasMore } = useEventsStore();
@@ -119,7 +118,6 @@ export const useDiscoverPage = () => {
         handleFormSubmit,
         handleLoadMore,
         handleSelectFilter,
-        logout,
         handleRefresh
     };
 };

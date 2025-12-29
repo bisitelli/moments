@@ -29,7 +29,6 @@ export default function DiscoverPage() {
     handleFormSubmit,
     handleLoadMore,
     handleSelectFilter,
-    logout,
     handleRefresh
   } = useDiscoverPage();
 
@@ -75,13 +74,6 @@ export default function DiscoverPage() {
         <Text style={styles.addButtonText}>＋</Text>
       </TouchableOpacity>
 
-      {/* TODO: Remove this button JUST LOGOUT WHILE PROFILE NOT IMPLEMENTED */}
-      <TouchableOpacity
-        style={styles.provisionalLogoutButton}
-        onPress={() => logout()}
-      >
-        <Text style={styles.provisionalLogoutButtonLabel}>Logout(Test)</Text>
-      </TouchableOpacity>
 
       {/* OVERLAY with TRANSPARENT wrapper */}
       <Modal
