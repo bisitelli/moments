@@ -2,8 +2,7 @@ import { ChatMessage } from '@/domain/model/entities/chat/chat_message';
 import { useChatMessageSocket } from '@/hooks/chat/use_chat_messages_socket';
 import { useUserAuthStore } from '@/store/auth/use_auth_store';
 import { useChatStore } from '@/store/chat/use_chat_messages_store';
-import { useHeaderHeight } from '@react-navigation/elements';
-import { useLocalSearchParams } from 'expo-router';
+import { useLocalSearchParams, useRouter } from 'expo-router'; 
 import { useEffect, useRef, useState, useCallback, useMemo } from 'react';
 import {
     ActivityIndicator,
@@ -19,17 +18,21 @@ import {
 } from 'react-native';
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { format, parseISO, isSameDay, isToday, isYesterday } from 'date-fns';
-import { Ionicons } from '@expo/vector-icons'; // Using Ionicons
+import { Ionicons } from '@expo/vector-icons';
 
 export default function ConversationScreen() {
-    const { id } = useLocalSearchParams();
+    const router = useRouter();
+    const { id, name, image, eventId } = useLocalSearchParams(); 
+    
     const chatId = Array.isArray(id) ? id[0] : id;
+    const chatTitle = Array.isArray(name) ? name[0] : name; 
+    const chatImage = Array.isArray(image) ? image[0] : (image ?? ""); 
+    const eventChatId = Array.isArray(eventId) ? eventId[0] : (eventId); 
     const user = useUserAuthStore((state) => state.user);
 
     // Layout Hooks
     const insets = useSafeAreaInsets();
-    const headerHeight = useHeaderHeight();
-
+    
     // Socket & Store Hooks
     const { incomingMessage, sendMessage } = useChatMessageSocket(chatId);
     const { messages, hasMore, fetchHistory, addMessage, isLoading, clearChat } = useChatStore();
@@ -37,16 +40,13 @@ export default function ConversationScreen() {
     const [inputText, setInputText] = useState("");
     const flatListRef = useRef<FlatList>(null);
 
-    // Memoize reversed messages for consistent index logic in inverted list
     const reversedMessages = useMemo(() => [...messages].reverse(), [messages]);
 
-    // Initial Load
     useEffect(() => {
         clearChat();
         fetchHistory(chatId);
     }, [chatId]);
 
-    // Incoming Socket Message
     useEffect(() => {
         if (incomingMessage) addMessage(incomingMessage);
     }, [incomingMessage]);
@@ -55,9 +55,15 @@ export default function ConversationScreen() {
         if (inputText.trim().length === 0) return;
         sendMessage(inputText);
         setInputText("");
-        
-        // Scroll to bottom (visually)
         setTimeout(() => flatListRef.current?.scrollToOffset({ offset: 0, animated: true }), 100);
+    };
+
+    const handleHeaderPress = () => {
+        // Navigate to single event details screen
+        router.push({
+            pathname: "/(private)/event/[id]",
+            params: { id: eventChatId }
+        });
     };
 
     // Helper: Date Headers
@@ -72,22 +78,16 @@ export default function ConversationScreen() {
         const isMe = item.senderName === user!.username;
         const currentMessageDate = parseISO(item.sentAt);
         
-        // Logic: Date Header
-        // In inverted list, index + 1 is the OLDER message
         const olderMessage = reversedMessages[index + 1];
         const showDateHeader = !olderMessage || !isSameDay(currentMessageDate, parseISO(olderMessage.sentAt));
 
-        // Logic: Visual Grouping
-        // index - 1 is the NEWER message
         const newerMessage = reversedMessages[index - 1]; 
         const isLastInGroup = !newerMessage || newerMessage.senderName !== item.senderName;
         const isFirstInGroup = !olderMessage || olderMessage.senderName !== item.senderName || showDateHeader;
 
-        // Time Formatting
         let timeString = "";
         try { timeString = format(currentMessageDate, 'HH:mm'); } catch (e) {}
 
-        // Helper: Render Avatar
         const renderAvatar = () => {
             if (item.senderProfilePictureUrl) {
                 return (
@@ -97,7 +97,6 @@ export default function ConversationScreen() {
                     />
                 );
             }
-            // Fallback: First letter
             return (
                 <View style={[styles.avatar, styles.avatarFallback]}>
                     <Text style={styles.avatarFallbackText}>
@@ -109,7 +108,6 @@ export default function ConversationScreen() {
 
         return (
             <View style={styles.itemContainer}>
-                {/* Date Header */}
                 {showDateHeader && (
                     <View style={styles.dateHeader}>
                         <Text style={styles.dateHeaderText}>
@@ -123,27 +121,22 @@ export default function ConversationScreen() {
                     isMe ? styles.rowMe : styles.rowOther,
                     { marginBottom: isLastInGroup ? 8 : 2 } 
                 ]}>
-                    {/* Avatar (Left side, only for others) */}
                     {!isMe && (
                         <View style={styles.avatarContainer}>
                             {isLastInGroup && renderAvatar()}
                         </View>
                     )}
 
-                    {/* Message Content Wrapper */}
                     <View style={{ maxWidth: "75%" }}> 
-                        {/* Sender Name (Above bubble) */}
                         {!isMe && isFirstInGroup && (
                             <Text style={styles.senderNameLabel}>
                                 {item.senderName}
                             </Text>
                         )}
 
-                        {/* Bubble */}
                         <View style={[
                             styles.messageBubble,
                             isMe ? styles.bubbleMe : styles.bubbleOther,
-                            // Dynamic Border Radius (Squircle effect)
                             isMe && !isLastInGroup && { borderBottomRightRadius: 4 },
                             isMe && !isFirstInGroup && { borderTopRightRadius: 4 },
                             !isMe && !isLastInGroup && { borderBottomLeftRadius: 4 },
@@ -168,66 +161,99 @@ export default function ConversationScreen() {
     }, [reversedMessages, user]);
 
     return (
-        <KeyboardAvoidingView
-            style={styles.container}
-            keyboardVerticalOffset={headerHeight} 
-            behavior={Platform.OS === "ios" ? "padding" : "height"} 
-        >
-            <View style={styles.chatBackground}>
-                {isLoading && messages.length === 0 ? (
-                    <View style={styles.loadingContainer}>
-                        <ActivityIndicator size="large" color="#3797F0" />
-                    </View>
-                ) : (
-                    <FlatList
-                        inverted
-                        ref={flatListRef}
-                        data={reversedMessages}
-                        keyExtractor={(item) => item.id}
-                        renderItem={renderMessage}
-                        // INCREASED PADDING HERE:
-                        // In inverted list, paddingBottom is the SPACE AT THE TOP of the scroll view
-                        contentContainerStyle={styles.listContent} 
-                        onEndReached={() => {
-                            if (messages.length > 0 && hasMore && !isLoading) fetchHistory(chatId);
-                        }}
-                        onEndReachedThreshold={0.5}
-                    />
-                )}
+        <View style={styles.container}>
+            {/* Custom Header */}
+            <View style={[styles.headerContainer, { paddingTop: insets.top }]}>
+                <View style={styles.headerContent}>
+                    
+                    {/* 1. Back Button (Leftmost) */}
+                    <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
+                        <Ionicons name="chevron-back" size={28} color="#000" />
+                    </TouchableOpacity>
+                    
+                    {/* 2. Image + Title (Clickable Group) */}
+                    <TouchableOpacity 
+                        style={styles.headerInfoContainer} 
+                        onPress={handleHeaderPress}
+                        activeOpacity={0.7}
+                    >
+                        {/* Event Image or Fallback Letter */}
+                        {chatImage !== "" ? (
+                            <Image source={{ uri: chatImage }} style={styles.headerImage} />
+                        ) : (
+                            <View style={[styles.headerImage, styles.headerImageFallback]}>
+                                <Text style={styles.headerFallbackText}>
+                                    {chatTitle ? chatTitle.charAt(0).toUpperCase() : "?"}
+                                </Text>
+                            </View>
+                        )}
+
+                        {/* Title (Stuck to the right of the image) */}
+                        <Text style={styles.headerTitle} numberOfLines={1}>
+                            {chatTitle || "Chat"}
+                        </Text>
+                    </TouchableOpacity>
+
+                </View>
             </View>
 
-            {/* Input Area */}
-            <View style={[styles.inputContainer, { paddingBottom: Math.max(insets.bottom, 10) }]}>
-                <View style={styles.inputWrapper}>
-                    <TextInput
-                        style={styles.input}
-                        value={inputText}
-                        onChangeText={setInputText}
-                        placeholder="Message..."
-                        placeholderTextColor="#9CA3AF"
-                        multiline
-                    />
+            <KeyboardAvoidingView
+                style={styles.chatBackground}
+                keyboardVerticalOffset={0} 
+                behavior={Platform.OS === "ios" ? "padding" : "height"} 
+            >
+                <View style={styles.chatBackground}>
+                    {isLoading && messages.length === 0 ? (
+                        <View style={styles.loadingContainer}>
+                            <ActivityIndicator size="large" color="#3797F0" />
+                        </View>
+                    ) : (
+                        <FlatList
+                            inverted
+                            ref={flatListRef}
+                            data={reversedMessages}
+                            keyExtractor={(item) => item.id}
+                            renderItem={renderMessage}
+                            contentContainerStyle={styles.listContent} 
+                            onEndReached={() => {
+                                if (messages.length > 0 && hasMore && !isLoading) fetchHistory(chatId);
+                            }}
+                            onEndReachedThreshold={0.5}
+                        />
+                    )}
                 </View>
-                
-                {/* Circular Send Button with Diagonal Arrow (Paper Plane) */}
-                <TouchableOpacity 
-                    onPress={handleSendMessage} 
-                    disabled={inputText.length === 0}
-                    style={[
-                        styles.sendButton,
-                        { backgroundColor: inputText.length > 0 ? "#3797F0" : "#EFEFEF" }
-                    ]}
-                >
-                     {/* 'send' is the paper plane icon (diagonal arrow) */}
-                     <Ionicons 
-                        name="send" 
-                        size={20} 
-                        color={inputText.length > 0 ? "#FFFFFF" : "#A8A8A8"} 
-                        style={{ marginLeft: 2 }} // Visual optical centering
-                     />
-                </TouchableOpacity>
-            </View>
-        </KeyboardAvoidingView>
+
+                {/* Input Area */}
+                <View style={[styles.inputContainer, { paddingBottom: Math.max(insets.bottom, 10) }]}>
+                    <View style={styles.inputWrapper}>
+                        <TextInput
+                            style={styles.input}
+                            value={inputText}
+                            onChangeText={setInputText}
+                            placeholder="Message..."
+                            placeholderTextColor="#9CA3AF"
+                            multiline
+                        />
+                    </View>
+                    
+                    <TouchableOpacity 
+                        onPress={handleSendMessage} 
+                        disabled={inputText.length === 0}
+                        style={[
+                            styles.sendButton,
+                            { backgroundColor: inputText.length > 0 ? "#3797F0" : "#EFEFEF" }
+                        ]}
+                    >
+                          <Ionicons 
+                            name="send" 
+                            size={20} 
+                            color={inputText.length > 0 ? "#FFFFFF" : "#A8A8A8"} 
+                            style={{ marginLeft: 2 }}
+                          />
+                    </TouchableOpacity>
+                </View>
+            </KeyboardAvoidingView>
+        </View>
     );
 }
 
@@ -236,6 +262,55 @@ const styles = StyleSheet.create({
         flex: 1,
         backgroundColor: "#FFFFFF",
     },
+    headerContainer: {
+        backgroundColor: "#FFFFFF",
+        borderBottomWidth: 1,
+        borderBottomColor: "#EFEFEF",
+        zIndex: 10,
+    },
+    headerContent: {
+        height: 44,
+        flexDirection: 'row',
+        alignItems: 'center',
+        paddingHorizontal: 8, 
+        paddingBottom: 4,
+    },
+    backButton: {
+        padding: 4,
+        marginRight: 8, 
+    },
+    headerInfoContainer: {
+        flex: 1,
+        flexDirection: 'row',
+        alignItems: 'center',
+        marginLeft: 4, 
+    },
+    headerImage: {
+        width: 36, 
+        height: 36, 
+        borderRadius: 18, 
+        marginRight: 10, 
+        backgroundColor: '#EFEFEF',
+    },
+    headerImageFallback: {
+        justifyContent: 'center',
+        alignItems: 'center',
+        backgroundColor: '#ddd',
+    },
+    headerFallbackText: {
+        fontSize: 16, 
+        fontWeight: 'bold',
+        color: '#555',
+    },
+    headerTitle: {
+        fontSize: 19, 
+        fontWeight: '600',
+        color: '#000',
+        flex: 1, 
+        textAlign: 'left',
+    },
+    // ----------------------
+
     chatBackground: {
         flex: 1,
         backgroundColor: "#FFFFFF",
@@ -247,8 +322,7 @@ const styles = StyleSheet.create({
     },
     listContent: {
         paddingHorizontal: 12, 
-        // Increased Visual Top Padding (start of conversation)
-        paddingBottom: 90, 
+        paddingBottom: 12, 
     },
     itemContainer: {},
     
@@ -390,7 +464,7 @@ const styles = StyleSheet.create({
         marginLeft: 8,
         width: 44,
         height: 44,
-        borderRadius: 22, // Circle
+        borderRadius: 22, 
         justifyContent: "center",
         alignItems: "center",
         marginBottom: 4,
