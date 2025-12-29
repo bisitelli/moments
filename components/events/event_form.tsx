@@ -1,6 +1,7 @@
 import { InterestTag } from "@/domain/model/enums/interest_tag";
+import DateTimePicker from "@react-native-community/datetimepicker";
 import React, { useState } from "react";
-import { View, Text, TouchableOpacity, TextInput, StyleSheet } from "react-native";
+import { Platform, StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
 
 // Define the structure of the event form data
 export interface EventFormData {
@@ -42,6 +43,16 @@ export default function EventForm({
       endDate: "",
   });
 
+  const [showStartPicker, setShowStartPicker] = useState(false);
+  const [showEndPicker, setShowEndPicker] = useState(false);
+
+  const [startDateValue, setStartDateValue] = useState<Date | undefined>(
+    form.startDate ? new Date(form.startDate) : undefined
+  );
+  const [endDateValue, setEndDateValue] = useState<Date | undefined>(
+    form.endDate ? new Date(form.endDate) : undefined
+  );
+
   // Handle form submission received from the parent
   const handleSave = () => {
     onFormSubmitted(form);          
@@ -61,20 +72,23 @@ export default function EventForm({
   return (
       <View>
         <Text style={styles.modalHeader}>{formLabel}</Text>
+        <Text style={styles.fieldLabel}>Title</Text>
         <TextInput
-          placeholder="Title"
+          placeholder="Enter a title for your event"
           value={form.title}
           onChangeText={(text) => setForm({ ...form, title: text })}
           style={styles.input}
         />
+        <Text style={styles.fieldLabel}>Description</Text>
         <TextInput
-          placeholder="Description"
+          placeholder="Describe what your event is about"
           value={form.description}
           onChangeText={(text) => setForm({ ...form, description: text })}
           style={styles.input}
         />
+        <Text style={styles.fieldLabel}>Image URL (optional)</Text>
         <TextInput
-          placeholder="Image (optional)"
+          placeholder="Link to an image for your event"
           value={form.image}
           onChangeText={(text) => setForm({ ...form, image: text })}
           style={styles.input}
@@ -85,30 +99,72 @@ export default function EventForm({
           onChangeText={(text) => setForm({ ...form, interests: text })}
           style={styles.input}
         /> */}
+        <Text style={styles.fieldLabel}>City</Text>
         <TextInput
-          placeholder="City"
+          placeholder="Where is the event happening?"
           value={form.city}
           onChangeText={(text) => setForm({ ...form, city: text })}
           style={styles.input}
         />
+        <Text style={styles.fieldLabel}>Place name</Text>
         <TextInput
-          placeholder="Place Name"
+          placeholder="Venue or location name"
           value={form.placeName}
           onChangeText={(text) => setForm({ ...form, placeName: text })}
           style={styles.input}
         />
-        <TextInput
-          placeholder="Start Date"
-          value={form.startDate}
-          onChangeText={(text) => setForm({ ...form, startDate: text })}
+        <Text style={styles.fieldLabel}>Start date</Text>
+        <TouchableOpacity
           style={styles.input}
-        />
-        <TextInput
-          placeholder="End Date"
-          value={form.endDate}
-          onChangeText={(text) => setForm({ ...form, endDate: text })}
+          onPress={() => setShowStartPicker(true)}
+        >
+          <Text style={{ color: form.startDate ? "#000" : "#9ca3af" }}>
+            {form.startDate || "Select start date"}
+          </Text>
+        </TouchableOpacity>
+        {showStartPicker && (
+          <DateTimePicker
+            value={startDateValue || new Date()}
+            mode="date"
+            display={Platform.OS === "ios" ? "spinner" : "default"}
+            onChange={(_event, selectedDate) => {
+              if (Platform.OS !== "ios") {
+                setShowStartPicker(false);
+              }
+              if (selectedDate) {
+                setStartDateValue(selectedDate);
+                const iso = selectedDate.toISOString();
+                setForm((prev) => ({ ...prev, startDate: iso }));
+              }
+            }}
+          />
+        )}
+        <Text style={styles.fieldLabel}>End date</Text>
+        <TouchableOpacity
           style={styles.input}
-        />
+          onPress={() => setShowEndPicker(true)}
+        >
+          <Text style={{ color: form.endDate ? "#000" : "#9ca3af" }}>
+            {form.endDate || "Select end date"}
+          </Text>
+        </TouchableOpacity>
+        {showEndPicker && (
+          <DateTimePicker
+            value={endDateValue || new Date()}
+            mode="date"
+            display={Platform.OS === "ios" ? "spinner" : "default"}
+            onChange={(_event, selectedDate) => {
+              if (Platform.OS !== "ios") {
+                setShowEndPicker(false);
+              }
+              if (selectedDate) {
+                setEndDateValue(selectedDate);
+                const iso = selectedDate.toISOString();
+                setForm((prev) => ({ ...prev, endDate: iso }));
+              }
+            }}
+          />
+        )}
 
         <View style={styles.formButtons}>
           <TouchableOpacity onPress={onClose}>
@@ -134,6 +190,13 @@ export default function EventForm({
 // Styles for the modal and form
 const styles = StyleSheet.create({
   modalHeader: { fontSize: 20, fontWeight: "bold", marginBottom: 10 },
+  fieldLabel: {
+    fontSize: 12,
+    fontWeight: "600",
+    color: "#6b7280",
+    marginBottom: 4,
+    marginTop: 8,
+  },
   input: {
     borderWidth: 1,
     borderColor: "#ddd",
