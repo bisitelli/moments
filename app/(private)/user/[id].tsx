@@ -55,8 +55,7 @@ export default function UserProfilePage() {
   // Data Mapping:
   // Map the Domain Entity (UserProfile) from the store to the UI Component Props (PublicUserProps).
   const userProps: PublicUserProps = {
-    displayName: publicProfile.name, // Adjust if you have a separate fullName field
-    username: `@${publicProfile.name}`,
+    username: publicProfile.name,
     interests: publicProfile.interests || [],
     bio: publicProfile.bio,
     city: publicProfile.city,
@@ -70,7 +69,7 @@ export default function UserProfilePage() {
       {/* Configure Header title automatically based on loaded user */}
       <Stack.Screen 
         options={{ 
-          title: userProps.displayName || "Profile",
+          title: userProps.username || "Profile",
           headerBackTitle: "Back" // Back button text for iOS
         }} 
       />

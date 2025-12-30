@@ -6,10 +6,9 @@ import {
   View,
 } from "react-native";
 
-// Interfaz para los datos que esperamos recibir de un usuario desconocido
+// Interfaz para los datos que esperamos recibir
 export interface PublicUserProps {
-  displayName: string;
-  username: string; // subtitle
+  username?: string;
   interests: string[];
   bio?: string;
   languages?: string[];
@@ -18,7 +17,7 @@ export interface PublicUserProps {
   country?: string;
 }
 
-// Sub-componente para las secciones estáticas (siempre visibles)
+// Sub-componente para las secciones
 const ReadOnlySection = ({
   title,
   children,
@@ -26,7 +25,7 @@ const ReadOnlySection = ({
   title: string;
   children: React.ReactNode;
 }) => {
-  if (!children) return null; // Si no hay info, no renderizamos la cajita
+  if (!children) return null;
 
   return (
     <View style={styles.section}>
@@ -39,11 +38,16 @@ const ReadOnlySection = ({
 };
 
 export default function PublicProfileScreen({ user }: { user: PublicUserProps }) {
-  // Inicial para el avatar
-  const initial = user.displayName ? user.displayName.charAt(0).toUpperCase() : "?";
-
-  // Formatear ubicación si existe
+  const initial = user.username ? user.username.charAt(0).toUpperCase() : "?";
   const locationText = [user.city, user.country].filter(Boolean).join(", ");
+
+  // Helper para verificar arrays vacíos y formatearlos
+  const formatArrayData = (data?: string[]) => {
+    if (data && data.length > 0) {
+      return data.join(", "); // "English, Spanish"
+    }
+    return "Not specified";
+  };
 
   return (
     <View style={styles.screenContainer}>
@@ -57,11 +61,10 @@ export default function PublicProfileScreen({ user }: { user: PublicUserProps })
         </View>
 
         {/* Basic Info */}
-        <Text style={styles.name}>{user.displayName}</Text>
-        <Text style={styles.subtitle}>{user.username}</Text>
+        <Text style={styles.name}>{user.username ?? "User"}</Text>
         {locationText ? <Text style={styles.location}>{locationText}</Text> : null}
 
-        {/* Interests Chips */}
+        {/* Interests Chips (Solo se muestra si hay intereses) */}
         {user.interests && user.interests.length > 0 && (
           <>
             <Text style={styles.label}>Interests</Text>
@@ -75,22 +78,26 @@ export default function PublicProfileScreen({ user }: { user: PublicUserProps })
           </>
         )}
 
-        {/* Info Sections (Always Expanded) */}
+        {/* Bio */}
         <ReadOnlySection title="Bio">
           <Text style={styles.bodyText}>
-            {user.bio || "This user hasn't written a bio yet."}
+            {user.bio && user.bio.trim() !== "" 
+              ? user.bio 
+              : "This user hasn't written a bio yet."}
           </Text>
         </ReadOnlySection>
 
+        {/* Languages - AQUI ESTABA EL ERROR */}
         <ReadOnlySection title="Languages">
           <Text style={styles.bodyText}>
-            {user.languages || "Not specified"}
+            {formatArrayData(user.languages)}
           </Text>
         </ReadOnlySection>
 
+        {/* Nationality - AQUI TAMBIEN */}
         <ReadOnlySection title="Nationality">
           <Text style={styles.bodyText}>
-            {user.nationality || "Not specified"}
+            {formatArrayData(user.nationality)}
           </Text>
         </ReadOnlySection>
 
@@ -102,8 +109,6 @@ export default function PublicProfileScreen({ user }: { user: PublicUserProps })
 const styles = StyleSheet.create({
   screenContainer: { flex: 1, backgroundColor: "#f9f9f9" },
   container: { padding: 20, paddingBottom: 40 },
-  
-  // Avatar
   avatarWrapper: {
     marginTop: 40,
     alignItems: "center",
@@ -122,8 +127,6 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     color: "#ffffff",
   },
-
-  // Text Info
   name: {
     fontSize: 28,
     fontWeight: "600",
@@ -131,20 +134,12 @@ const styles = StyleSheet.create({
     textAlign: "center",
     color: "#111827",
   },
-  subtitle: {
-    fontSize: 16,
-    color: "#6b7280", // Gray 500
-    textAlign: "center",
-    marginBottom: 8,
-  },
   location: {
     fontSize: 14,
     color: "#6b7280",
     textAlign: "center",
     marginBottom: 24,
   },
-
-  // Interests
   label: { 
     fontWeight: "600", 
     marginTop: 8, 
@@ -165,14 +160,11 @@ const styles = StyleSheet.create({
     color: "#0066cc",
     fontWeight: "500"
   },
-
-  // Sections (Static Cards)
   section: {
     borderRadius: 12,
     backgroundColor: "#fff",
     marginBottom: 16,
     overflow: "hidden",
-    // Sombra suave para dar efecto de tarjeta
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.05,
@@ -182,7 +174,7 @@ const styles = StyleSheet.create({
   sectionHeader: {
     paddingHorizontal: 16,
     paddingVertical: 12,
-    backgroundColor: "#f3f4f6", // Un gris muy claro para diferenciar el header
+    backgroundColor: "#f3f4f6",
     borderBottomWidth: 1,
     borderBottomColor: "#f0f0f0",
   },
