@@ -7,7 +7,7 @@ export const useProfilePage = () => {
   const user = useUserAuthStore((state) => state.user);
   const logout = useUserAuthStore((state) => state.logout);
 
-  const { profile, isLoading, error, fetchProfile, updateProfile, clearProfile } =
+  const { profile, isLoading, error, fetchProfile, updateProfile, clearStore, clearPublicProfile } =
     useUserProfileStore();
 
   // Track which username the current profile belongs to
@@ -21,10 +21,10 @@ export const useProfilePage = () => {
     // When the logged-in user changes, clear any previous profile and fetch a new one
     if (lastProfileOwner !== usernameKey) {
       setLastProfileOwner(usernameKey);
-      clearProfile();
+      clearPublicProfile();
       fetchProfile();
     }
-  }, [usernameKey, lastProfileOwner, clearProfile, fetchProfile]);
+  }, [usernameKey, lastProfileOwner, clearPublicProfile, fetchProfile]);
 
   const displayName =
     profile?.name || user?.username || user?.email || "Your Name";
@@ -129,6 +129,7 @@ export const useProfilePage = () => {
 
   const handleLogout = async () => {
     await logout();
+    clearStore()
   };
 
   return {
@@ -156,7 +157,7 @@ export const useProfilePage = () => {
     setEditCity,
     setEditCountry,
     setEditInterests,
-     setEditBio,
+    setEditBio,
     handleCloseEdit,
     handleSubmitEdit,
     languagesText,

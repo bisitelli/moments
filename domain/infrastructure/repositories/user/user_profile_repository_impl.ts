@@ -4,6 +4,7 @@ import { UserProfile } from "@/domain/model/entities/events/user_profile";
 import { UserProfileRepository } from "@/domain/repository/user/user_profile_repository";
 
 export class UserProfileRepositoryImpl implements UserProfileRepository {
+
   constructor(private readonly dataSource: UserProfileDataSource) {}
 
   async getMyProfile(): Promise<UserProfile> {
@@ -12,6 +13,10 @@ export class UserProfileRepositoryImpl implements UserProfileRepository {
 
   async updateMyProfile(userProfileId: string, payload: UserProfileUpdateRequest): Promise<UserProfile> {
     return this.dataSource.updateMyProfile(userProfileId, payload);
+  }
+
+  fetchUserById(id: string): Promise<UserProfile> {
+    return this.dataSource.getUserById(id);
   }
 }
 
