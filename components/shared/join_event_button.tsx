@@ -1,10 +1,11 @@
 import React from "react";
-import { StyleSheet, Text, TouchableOpacity } from "react-native";
+import { StyleSheet, Text, TouchableOpacity, ActivityIndicator } from "react-native";
 
 type JoinButtonProps = {
   onPress: () => void;
-  label?: string;                    // Texto del botón (opcional, default "Join")
-  variant?: 'primary' | 'destructive'; // Estilo visual (opcional, default "primary")
+  label?: string;                    
+  variant?: 'primary' | 'destructive'; // Visual style (optional, default "primary")
+  isLoading?: boolean;               // Loading state (optional, default false)
 };
 
 /**
@@ -13,20 +14,26 @@ type JoinButtonProps = {
 export default function JoinEventButton({ 
   onPress, 
   label = "Join", 
-  variant = "primary" 
+  variant = "primary",
+  isLoading = false
 }: JoinButtonProps) {
 
-  // Decidimos el color según la variante
+  // Determine color based on variant
   const isDestructive = variant === 'destructive';
-  const backgroundColor = isDestructive ? "#FF3B30" : "#007AFF"; // Rojo vs Azul
+  const backgroundColor = isDestructive ? "#FF3B30" : "#007AFF"; // Red vs Blue
 
   return (
     <TouchableOpacity 
       style={[styles.joinButton, { backgroundColor }]} 
       onPress={onPress}
       activeOpacity={0.8}
+      disabled={isLoading} // Disable interaction when loading
     >
-      <Text style={styles.joinButtonText}>{label}</Text>
+      {isLoading ? (
+        <ActivityIndicator size="small" color="white" />
+      ) : (
+        <Text style={styles.joinButtonText}>{label}</Text>
+      )}
     </TouchableOpacity>
   );
 }
@@ -37,15 +44,15 @@ const styles = StyleSheet.create({
     position: "absolute",
     bottom: 30,
     right: 30,
-    // backgroundColor se maneja dinámicamente arriba
     borderRadius: 50,
     paddingVertical: 15,
     paddingHorizontal: 25,
+    minWidth: 100, 
     flexDirection: "row",
     justifyContent: "center",
     alignItems: "center",
     
-    // Sombra
+    // Shadow
     elevation: 4,
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },

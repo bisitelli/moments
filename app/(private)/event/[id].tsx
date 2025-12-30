@@ -19,6 +19,7 @@ export default function EventDetailScreen() {
     eventParticipants,
     isLoadingEvent,
     isLoadingParticipants,
+    loadingSubscription,
     insets,
     scrollY,
     headerOpacity,
@@ -126,6 +127,7 @@ export default function EventDetailScreen() {
               "Join Event"
         }
         variant={isJoined || isOrganiser ? "destructive" : "primary"}
+        isLoading={loadingSubscription}
       />
     </View>
   );

@@ -128,6 +128,7 @@ export const useEventDetailPage = () => {
         eventParticipants,
         isLoadingEvent,
         isLoadingParticipants,
+        loadingSubscription,
         isJoined, 
         isOrganiser: user?.username === event?.organiser.profile.name,
         
