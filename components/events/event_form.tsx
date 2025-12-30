@@ -1,7 +1,8 @@
 import { InterestTag } from "@/domain/model/enums/interest_tag";
 import DateTimePicker from "@react-native-community/datetimepicker";
 import React, { useState } from "react";
-import { Alert, Platform, StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
+import { Alert, Image, Platform, StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
+import { launchImageLibrary } from "react-native-image-picker";
 
 // Define the structure of the event form data
 export interface EventFormData {
@@ -55,6 +56,39 @@ export default function EventForm({
     form.endDate ? new Date(form.endDate) : undefined
   );
 
+  const [imagePreviewUri, setImagePreviewUri] = useState<string | undefined>(
+    undefined
+  );
+
+  const handlePickImage = () => {
+    launchImageLibrary(
+      {
+        mediaType: "photo",
+        quality: 0.8,
+        includeBase64: true,
+      },
+      (response) => {
+        if (response.didCancel) {
+          return;
+        }
+        if (response.errorCode) {
+          Alert.alert("Image error", response.errorMessage || "Failed to pick image");
+          return;
+        }
+        const asset = response.assets && response.assets[0];
+        if (!asset) return;
+
+        // Store base64 in form.image so backend gets a string
+        if (asset.base64) {
+          setForm((prev) => ({ ...prev, image: asset.base64 || "" }));
+        }
+        if (asset.uri) {
+          setImagePreviewUri(asset.uri);
+        }
+      }
+    );
+  };
+
   // Handle form submission received from the parent
   const handleSave = () => {
     const start = form.startDate ? new Date(form.startDate) : null;
@@ -92,27 +126,39 @@ export default function EventForm({
   return (
       <View>
         <Text style={styles.modalHeader}>{formLabel}</Text>
-        <Text style={styles.fieldLabel}>Title</Text>
+
+        {/* Image picker area */}
+        <TouchableOpacity style={styles.imagePicker} onPress={handlePickImage}>
+          {imagePreviewUri ? (
+            <Image
+              source={{ uri: imagePreviewUri }}
+              style={styles.imagePreview}
+            />
+          ) : (
+            <Text style={styles.imagePickerText}>+ Add image</Text>
+          )}
+        </TouchableOpacity>
+
+        <Text style={styles.fieldLabel}>Event name</Text>
         <TextInput
-          placeholder="Enter a title for your event"
+          placeholder="Event name"
           value={form.title}
           onChangeText={(text) => setForm({ ...form, title: text })}
           style={styles.input}
         />
         <Text style={styles.fieldLabel}>Description</Text>
         <TextInput
-          placeholder="Describe what your event is about"
+          placeholder="Description"
           value={form.description}
           onChangeText={(text) => setForm({ ...form, description: text })}
           style={styles.input}
         />
-        <Text style={styles.fieldLabel}>Image URL (optional)</Text>
-        <TextInput
-          placeholder="Link to an image for your event"
-          value={form.image}
-          onChangeText={(text) => setForm({ ...form, image: text })}
-          style={styles.input}
-        />
+
+        {/* Location section */}
+        <View style={styles.sectionHeaderRow}>
+          <View style={styles.sectionDot} />
+          <Text style={styles.sectionHeaderText}>Location</Text>
+        </View>
         {/* <TextInput  //TODO: Change to multi-select dropdown later
           placeholder="Interests"
           value={form.interests}
@@ -121,18 +167,24 @@ export default function EventForm({
         /> */}
         <Text style={styles.fieldLabel}>City</Text>
         <TextInput
-          placeholder="Where is the event happening?"
+          placeholder="City"
           value={form.city}
           onChangeText={(text) => setForm({ ...form, city: text })}
           style={styles.input}
         />
-        <Text style={styles.fieldLabel}>Place name</Text>
+        <Text style={styles.fieldLabel}>Location name</Text>
         <TextInput
-          placeholder="Venue or location name"
+          placeholder="Location name"
           value={form.placeName}
           onChangeText={(text) => setForm({ ...form, placeName: text })}
           style={styles.input}
         />
+
+        {/* Time section */}
+        <View style={styles.sectionHeaderRow}>
+          <Text style={styles.sectionHeaderIcon}>🗓️</Text>
+          <Text style={styles.sectionHeaderText}>Time</Text>
+        </View>
         <Text style={styles.fieldLabel}>Start date</Text>
         <TouchableOpacity
           style={styles.input}
@@ -304,7 +356,54 @@ export default function EventForm({
 
 // Styles for the modal and form
 const styles = StyleSheet.create({
-  modalHeader: { fontSize: 20, fontWeight: "bold", marginBottom: 10 },
+  modalHeader: {
+    fontSize: 20,
+    fontWeight: "bold",
+    marginBottom: 12,
+    textAlign: "center",
+  },
+  imagePicker: {
+    height: 160,
+    borderRadius: 18,
+    backgroundColor: "#f3f4f6",
+    justifyContent: "center",
+    alignItems: "center",
+    marginBottom: 16,
+    marginTop: 8,
+    overflow: "hidden",
+  },
+  imagePickerText: {
+    color: "#9ca3af",
+    fontSize: 14,
+    fontWeight: "600",
+  },
+  imagePreview: {
+    width: "100%",
+    height: "100%",
+    resizeMode: "cover",
+  },
+  sectionHeaderRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginTop: 16,
+    marginBottom: 4,
+  },
+  sectionDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: "#ef4444",
+    marginRight: 6,
+  },
+  sectionHeaderText: {
+    fontSize: 13,
+    fontWeight: "600",
+    color: "#111827",
+  },
+  sectionHeaderIcon: {
+    marginRight: 6,
+    fontSize: 14,
+  },
   fieldLabel: {
     fontSize: 12,
     fontWeight: "600",
