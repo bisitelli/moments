@@ -1,50 +1,67 @@
-# Welcome to your Expo app 👋
+# CampusConnect 🎓
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+Moments is a mobile application designed for students who want to discover things to do, create events, and meet new people.
 
-## Get started
+The app focuses on bringing students together by making it easy to find activities around the city and connect with others through shared experiences.
 
-1. Install dependencies
+---
 
-   ```bash
-   npm install
-   ```
+## 🎯 What is CampusConnect?
 
-2. Start the app
+Moments helps students feel more connected to their campus and city life.
 
-   ```bash
-   npx expo start
-   ```
+Users can explore activities happening nearby, host their own events, and join others with just a tap. When a user joins an event, they are automatically added to a group chat with other participants, making it easy to connect, plan, and break the ice before meeting in person.
 
-In the output, you'll find options to open the app in a
+---
 
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
+## ✨ Key Features
 
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
+- 🔍 **Discover Activities & Events**  
+  Browse events and activities happening around the city and campus.
 
-## Get a fresh project
+- ➕ **Create Your Own Events**  
+  Host your own events and invite other students to join.
 
-When you're ready, run:
+- 🤝 **Join Events**  
+  Join events that interest you and meet new people.
 
-```bash
-npm run reset-project
-```
+- 💬 **Event-Based Group Chat**  
+  Automatically join a group chat when you join an event and chat with other participants.
 
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
+---
 
-## Learn more
+## 🛠️ Tech Stack
 
-To learn more about developing your project with Expo, look at the following resources:
+- **Mobile App:** Expo & React Native  
+- **Backend API:** Java & Spring Boot  
+- **Database:** PostgreSQL  
+- **Authentication:** Java-based authentication (e.g. Spring Security / JWT)
 
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
+---
 
-## Join the community
+## 🎓 Who Is It For?
 
-Join our community of developers creating universal apps.
+- University and college students  
+- Exchange and international students  
+- Anyone looking to be more social during their studies  
 
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+---
+
+## 📚 Project Status
+
+Moments is a school project currently under development.
+
+---
+
+## 🙌 Vision
+
+Our goal is to make student life more social, inclusive, and connected by lowering the barrier to meeting new people and discovering new experiences.
+
+---
+
+## 📄 License
+
+This project was created as part of a school project.
+
+Licensing details may be updated in the future.
+
