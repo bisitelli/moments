@@ -1,7 +1,7 @@
 import { InterestTag } from "@/domain/model/enums/interest_tag";
 import DateTimePicker from "@react-native-community/datetimepicker";
 import React, { useState } from "react";
-import { Platform, StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
+import { Alert, Platform, StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
 
 // Define the structure of the event form data
 export interface EventFormData {
@@ -43,8 +43,10 @@ export default function EventForm({
       endDate: "",
   });
 
-  const [showStartPicker, setShowStartPicker] = useState(false);
-  const [showEndPicker, setShowEndPicker] = useState(false);
+  const [showStartDatePicker, setShowStartDatePicker] = useState(false);
+  const [showStartTimePicker, setShowStartTimePicker] = useState(false);
+  const [showEndDatePicker, setShowEndDatePicker] = useState(false);
+  const [showEndTimePicker, setShowEndTimePicker] = useState(false);
 
   const [startDateValue, setStartDateValue] = useState<Date | undefined>(
     form.startDate ? new Date(form.startDate) : undefined
@@ -55,7 +57,26 @@ export default function EventForm({
 
   // Handle form submission received from the parent
   const handleSave = () => {
-    onFormSubmitted(form);          
+    const start = form.startDate ? new Date(form.startDate) : null;
+    const end = form.endDate ? new Date(form.endDate) : null;
+
+    if (!start || !end || isNaN(start.getTime()) || isNaN(end.getTime())) {
+      Alert.alert("Invalid dates", "Please select both a start and end date.");
+      return;
+    }
+
+    const diffMs = end.getTime() - start.getTime();
+    const maxDurationMs = 24 * 60 * 60 * 1000;
+
+    if (diffMs <= 0 || diffMs >= maxDurationMs) {
+      Alert.alert(
+        "Invalid duration",
+        "The event must be longer than 0 hours and shorter than 24 hours."
+      );
+      return;
+    }
+
+    onFormSubmitted(form);
     setForm({                       
       title: "",
       description: "",
@@ -68,7 +89,6 @@ export default function EventForm({
     });
   };
 
-  // TODO: Add field validation as needed
   return (
       <View>
         <Text style={styles.modalHeader}>{formLabel}</Text>
@@ -116,25 +136,73 @@ export default function EventForm({
         <Text style={styles.fieldLabel}>Start date</Text>
         <TouchableOpacity
           style={styles.input}
-          onPress={() => setShowStartPicker(true)}
+          onPress={() => setShowStartDatePicker(true)}
         >
           <Text style={{ color: form.startDate ? "#000" : "#9ca3af" }}>
-            {form.startDate || "Select start date"}
+            {startDateValue
+              ? startDateValue.toLocaleDateString()
+              : "Select start date"}
           </Text>
         </TouchableOpacity>
-        {showStartPicker && (
+        {showStartDatePicker && (
           <DateTimePicker
             value={startDateValue || new Date()}
             mode="date"
             display={Platform.OS === "ios" ? "spinner" : "default"}
             onChange={(_event, selectedDate) => {
               if (Platform.OS !== "ios") {
-                setShowStartPicker(false);
+                setShowStartDatePicker(false);
               }
               if (selectedDate) {
-                setStartDateValue(selectedDate);
-                const iso = selectedDate.toISOString();
-                setForm((prev) => ({ ...prev, startDate: iso }));
+                // Preserve previous time if set
+                const base = startDateValue || new Date();
+                const combined = new Date(selectedDate);
+                combined.setHours(
+                  base.getHours(),
+                  base.getMinutes(),
+                  0,
+                  0
+                );
+                setStartDateValue(combined);
+                setForm((prev) => ({ ...prev, startDate: combined.toISOString() }));
+              }
+            }}
+          />
+        )}
+        <Text style={styles.fieldLabel}>Start time</Text>
+        <TouchableOpacity
+          style={styles.input}
+          onPress={() => setShowStartTimePicker(true)}
+        >
+          <Text style={{ color: startDateValue ? "#000" : "#9ca3af" }}>
+            {startDateValue
+              ? startDateValue.toLocaleTimeString([], {
+                  hour: "2-digit",
+                  minute: "2-digit",
+                })
+              : "Select start time"}
+          </Text>
+        </TouchableOpacity>
+        {showStartTimePicker && (
+          <DateTimePicker
+            value={startDateValue || new Date()}
+            mode="time"
+            display={Platform.OS === "ios" ? "spinner" : "default"}
+            onChange={(_event, selectedTime) => {
+              if (Platform.OS !== "ios") {
+                setShowStartTimePicker(false);
+              }
+              if (selectedTime) {
+                const base = startDateValue || new Date();
+                const combined = new Date(base);
+                combined.setHours(
+                  selectedTime.getHours(),
+                  selectedTime.getMinutes(),
+                  0,
+                  0
+                );
+                setStartDateValue(combined);
+                setForm((prev) => ({ ...prev, startDate: combined.toISOString() }));
               }
             }}
           />
@@ -142,25 +210,72 @@ export default function EventForm({
         <Text style={styles.fieldLabel}>End date</Text>
         <TouchableOpacity
           style={styles.input}
-          onPress={() => setShowEndPicker(true)}
+          onPress={() => setShowEndDatePicker(true)}
         >
           <Text style={{ color: form.endDate ? "#000" : "#9ca3af" }}>
-            {form.endDate || "Select end date"}
+            {endDateValue
+              ? endDateValue.toLocaleDateString()
+              : "Select end date"}
           </Text>
         </TouchableOpacity>
-        {showEndPicker && (
+        {showEndDatePicker && (
           <DateTimePicker
             value={endDateValue || new Date()}
             mode="date"
             display={Platform.OS === "ios" ? "spinner" : "default"}
             onChange={(_event, selectedDate) => {
               if (Platform.OS !== "ios") {
-                setShowEndPicker(false);
+                setShowEndDatePicker(false);
               }
               if (selectedDate) {
-                setEndDateValue(selectedDate);
-                const iso = selectedDate.toISOString();
-                setForm((prev) => ({ ...prev, endDate: iso }));
+                const base = endDateValue || new Date();
+                const combined = new Date(selectedDate);
+                combined.setHours(
+                  base.getHours(),
+                  base.getMinutes(),
+                  0,
+                  0
+                );
+                setEndDateValue(combined);
+                setForm((prev) => ({ ...prev, endDate: combined.toISOString() }));
+              }
+            }}
+          />
+        )}
+        <Text style={styles.fieldLabel}>End time</Text>
+        <TouchableOpacity
+          style={styles.input}
+          onPress={() => setShowEndTimePicker(true)}
+        >
+          <Text style={{ color: endDateValue ? "#000" : "#9ca3af" }}>
+            {endDateValue
+              ? endDateValue.toLocaleTimeString([], {
+                  hour: "2-digit",
+                  minute: "2-digit",
+                })
+              : "Select end time"}
+          </Text>
+        </TouchableOpacity>
+        {showEndTimePicker && (
+          <DateTimePicker
+            value={endDateValue || new Date()}
+            mode="time"
+            display={Platform.OS === "ios" ? "spinner" : "default"}
+            onChange={(_event, selectedTime) => {
+              if (Platform.OS !== "ios") {
+                setShowEndTimePicker(false);
+              }
+              if (selectedTime) {
+                const base = endDateValue || new Date();
+                const combined = new Date(base);
+                combined.setHours(
+                  selectedTime.getHours(),
+                  selectedTime.getMinutes(),
+                  0,
+                  0
+                );
+                setEndDateValue(combined);
+                setForm((prev) => ({ ...prev, endDate: combined.toISOString() }));
               }
             }}
           />

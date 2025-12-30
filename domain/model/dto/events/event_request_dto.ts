@@ -1,13 +1,16 @@
-import { InterestTag } from "../../enums/interest_tag"
-
+import { InterestTag } from "../../enums/interest_tag";
 
 export interface EventRequestDTO {
-    title: string
-    description: string
-    image?: string
-    interests: InterestTag[]   
-    city: string
-    placeName: string
-    startDate: string
-    endDate: string
+    name: string;
+    eventBio: {
+        description: string;
+        image: string | null;
+        interestTags: InterestTag[];
+    };
+    location: {
+        city: string;
+        placeName: string;
+    };
+    startDate: string;
+    endDate: string;
 }

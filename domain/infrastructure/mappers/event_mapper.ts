@@ -1,10 +1,9 @@
-import { EventResponseDTO } from "@/domain/model/dto/events/event_response_dto";
-import { mapProfileToFrontend, processImage } from "./user_profile_mapper";
-import { EventItem } from "@/domain/model/entities/events/event_item";
-import { EventOrganiser } from "@/domain/model/entities/events/event_organiser";
-import { InterestTag } from "@/domain/model/enums/interest_tag";
 import { EventFormData } from "@/components/events/event_form";
 import { EventRequestDTO } from "@/domain/model/dto/events/event_request_dto";
+import { EventResponseDTO } from "@/domain/model/dto/events/event_response_dto";
+import { EventItem } from "@/domain/model/entities/events/event_item";
+import { EventOrganiser } from "@/domain/model/entities/events/event_organiser";
+import { mapProfileToFrontend, processImage } from "./user_profile_mapper";
 
 
 export const mapEventToFrontend = (dto: EventResponseDTO): EventItem => {
@@ -28,7 +27,7 @@ export const mapEventToFrontend = (dto: EventResponseDTO): EventItem => {
         title: dto.name,
         description: dto.eventBio?.description ?? "",
         image: processImage(dto.eventBio?.image) || null,
-        interests: (dto.eventBio?.interestTags ?? []) as InterestTag[],
+        interests: (dto.eventBio?.interestTags ?? []),
         organiser: organiserMapped,
         participantCount: dto.participantCount ?? 0, 
         city: dto.location?.city ?? "Unknown City",
@@ -40,14 +39,18 @@ export const mapEventToFrontend = (dto: EventResponseDTO): EventItem => {
 
 export const mapEventFormToDTO = (formData: EventFormData): EventRequestDTO => {
   return {
-    title: formData.title.trim(),
-    description: formData.description.trim(),
-    // If image is empty string, send undefined, otherwise trim it
-    image: formData.image?.trim() ? formData.image.trim() : undefined,
-    // Ensure interests is an array even if undefined in form
-    interests: formData.interests ?? [], 
-    city: formData.city.trim(),
-    placeName: formData.placeName.trim(),
+        name: formData.title.trim(),
+        eventBio: {
+            description: formData.description.trim(),
+            // If image is empty or missing, send null explicitly; otherwise trimmed string
+            image: formData.image?.trim() ? formData.image.trim() : null,
+            // Ensure interests is an array even if undefined in form
+            interestTags: formData.interests ?? [],
+        },
+        location: {
+            city: formData.city.trim(),
+            placeName: formData.placeName.trim(),
+        },
     startDate: formData.startDate,
     endDate: formData.endDate,
   };

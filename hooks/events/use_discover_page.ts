@@ -1,14 +1,13 @@
-import { useState, useCallback, useEffect } from "react";
-import { EventRepository } from "@/domain/repository/events/event_repository";
-import { InterestTag } from "@/domain/model/enums/interest_tag";
-import { FilterTag } from "@/domain/model/enums/filter_tag";
 import { EventFormData } from "@/components/events/event_form";
 import { mapEventFormToDTO } from "@/domain/infrastructure/mappers/event_mapper";
+import { FilterTag } from "@/domain/model/enums/filter_tag";
+import { InterestTag } from "@/domain/model/enums/interest_tag";
+import { EventRepository } from "@/domain/repository/events/event_repository";
 import { useEventFilter } from "@/hooks/events/use_event_filter";
 import { useEventFilterStore } from "@/store/events/use_event_filter_store";
-import { useUserEventStore } from "@/store/events/user_events_store";
-import { useUserAuthStore } from "@/store/auth/use_auth_store";
 import { useEventsStore } from "@/store/events/use_events_store_factory";
+import { useUserEventStore } from "@/store/events/user_events_store";
+import { useCallback, useEffect, useState } from "react";
 
 export const useDiscoverPage = () => {
     // --- Global Store Data ---
