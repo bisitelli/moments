@@ -131,6 +131,7 @@ export const useEventDetailPage = () => {
         loadingSubscription,
         isJoined, 
         isOrganiser: user?.username === event?.organiser.profile.name,
+        isMe: (username: string) => user?.username === username,
         
         // UI Helpers
         insets,

@@ -29,6 +29,7 @@ export default function EventDetailScreen() {
     handleGoBack,
     isOrganiser,
     isJoined, 
+    isMe,
     handleLeaveEvent 
   } = useEventDetailPage();
 
@@ -93,7 +94,7 @@ export default function EventDetailScreen() {
         renderItem={({ item }) => (
           <View style={{ paddingHorizontal: 15 }}>
             <ParticipantCard
-              participantName={item.profile.name}
+              participantName={isMe(item.profile.name) ? "You" : item.profile.name}
               participantImage={item.profile.profileImage ?? ""}
               onPress={() => handleProfileNavigation(item.id)}
             />

@@ -10,13 +10,15 @@ import {
 import { useRouter } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useUserChatsStore } from "@/store/chat/use_user_chats_store";
-import { useCallback, useEffect } from "react";
+import { useCallback } from "react";
 import { useFocusEffect } from "@react-navigation/native";
 import { UserChatsView } from "@/domain/model/entities/chat/user_chat_view";
 import { useUserChatListSocket } from "@/hooks/chat/use_user_chat_list_socket";
+import { useUserAuthStore } from "@/store/auth/use_auth_store";
 
 export default function ChatsScreen() {
     const router = useRouter();
+    const user = useUserAuthStore((state) => state.user);
     
     const { 
         chats, 
@@ -73,6 +75,8 @@ export default function ChatsScreen() {
 
     const renderItem = ({ item }: { item: UserChatsView }) => {
         const imageUri = item.eventImage ?? "";
+        const isMe = item.lastMessage?.senderName === user?.username;
+        const lastMessageUsername = isMe ? "You" : item.lastMessage?.senderName;
 
         return (
             <TouchableOpacity style={styles.row} onPress={
@@ -94,7 +98,7 @@ export default function ChatsScreen() {
                     <Text style={styles.name}>{item.eventName}</Text>
                     <Text style={styles.lastMessage} numberOfLines={1}>
                         {item.lastMessage 
-                            ? `${item.lastMessage.senderName}: ${item.lastMessage.content}`
+                            ? `${lastMessageUsername}: ${item.lastMessage.content}`
                             : "Be the first one to say hello 👋"
                         }
                     </Text>
