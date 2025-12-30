@@ -71,8 +71,9 @@ export const useEventDetailPage = () => {
 
         if (success) {
             showMessage("Subscription completed!");
-            // CRITICAL: Refresh list to include the new user, switching 'isJoined' to true
-            fetchEventParticipants(event.id); 
+
+            // Navigate to the event chat list screen
+            handleGoToChatListScreen();
             return;
         }
 
@@ -93,13 +94,10 @@ export const useEventDetailPage = () => {
         if (success) {
             const isOrganizer = event.organiser.profile.name === user?.username;
             showMessage(isOrganizer ? "Event cancelled" : "Unsubscribed successfully.");
-            
-            if (isOrganizer) {
-                router.back();
-            } else {
-                // CRITICAL: Refresh list to remove the user, switching 'isJoined' to false
-                fetchEventParticipants(event.id);
-            }
+
+            // Navigate to the chat list screen
+            handleGoToChatListScreen()
+
             return;
         }
 
@@ -110,8 +108,8 @@ export const useEventDetailPage = () => {
         console.log("Navigate to profile:", userId);
     };
 
-    const handleGoBack = () => {
-        router.back();
+    const handleGoToChatListScreen = () => {
+        router.push("/(private)/(tabs)/chats_screen")
     };
 
     /**
@@ -131,6 +129,7 @@ export const useEventDetailPage = () => {
         isLoadingEvent,
         isLoadingParticipants,
         isJoined, 
+        isOrganiser: user?.username === event?.organiser.profile.name,
         
         // UI Helpers
         insets,
@@ -141,7 +140,8 @@ export const useEventDetailPage = () => {
         handleJoinEvent,
         handleLeaveEvent,
         handleProfileNavigation,
+        handleGoBack: () => router.back(),
         handleLoadMore,
-        handleGoBack
+        handleGoToChatListScreen
     };
 };

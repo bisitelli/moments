@@ -26,6 +26,7 @@ export default function EventDetailScreen() {
     handleProfileNavigation,
     handleLoadMore,
     handleGoBack,
+    isOrganiser,
     isJoined, 
     handleLeaveEvent 
   } = useEventDetailPage();
@@ -109,11 +110,22 @@ export default function EventDetailScreen() {
         contentContainerStyle={{ paddingBottom: 100 }}
       />
 
-      {/* --- MODIFIED BUTTON LOGIC --- */}
+      {/* --- BUTTON LOGIC --- */}
       <JoinEventButton 
-        onPress={isJoined ? handleLeaveEvent : handleJoinEvent} 
-        label={isJoined ? "Unsubscribe" : "Join Event"}
-        variant={isJoined ? "destructive" : "primary"} // Optional: if you want to change color (e.g., Red for leave)
+        onPress={
+          isOrganiser ? handleLeaveEvent
+            : isJoined ? handleLeaveEvent
+            : handleJoinEvent
+        } 
+        label={
+          isOrganiser ?
+            "Delete Event"
+            : isJoined ?
+              "Leave Event"
+              :
+              "Join Event"
+        }
+        variant={isJoined || isOrganiser ? "destructive" : "primary"}
       />
     </View>
   );
