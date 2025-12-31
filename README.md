@@ -38,7 +38,7 @@ Whether you're a new student or just looking to expand your network, CampusConne
 - **Mobile App:** Expo & React Native  
 - **Backend API:** Java & Spring Boot  
 - **Database:** PostgreSQL  
-- **Authentication:** Java-based authentication (e.g. Spring Security / JWT)
+- **Authentication:** Java-based authentication JWT
 
 ---
 
