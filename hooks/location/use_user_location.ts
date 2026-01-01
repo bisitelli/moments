@@ -20,14 +20,12 @@ export const useUserLocation = () => {
 
       // If we don't have permission and it's a manual refresh,
       if (isManualRefresh && existingStatus !== 'granted') {
-        console.log("Manual refresh: requesting location permission");
          setLoading(false);
          return; 
       }
 
       // If it's the first load (not manual refresh) and we don't have permission,
       if (existingStatus !== 'granted') {
-          console.log("First load: requesting location permission");
         const { status } = await Location.requestForegroundPermissionsAsync();
         finalStatus = status;
       }
