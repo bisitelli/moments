@@ -81,7 +81,7 @@ export default function EventCard({
           <View style={styles.infoRow}>
             <MapPin size={16} color="#6B7280" style={styles.icon} />
             <Text style={styles.infoText} numberOfLines={1}>
-              {event.placeName}
+              {event.placeName}, {event.city}
             </Text>
           </View>
         </View>
