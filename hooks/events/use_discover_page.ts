@@ -13,10 +13,9 @@ import { useCallback, useEffect, useState } from "react";
 
 export const useDiscoverPage = () => {
 
-    // User Profile data for initial state
+    // --- User Profile & Global Filter State ---
     const userProfile = useUserProfileStore((s) => s.profile);
     const fetchProfile = useUserProfileStore((s) => s.fetchProfile);
-    const userCity = userProfile?.city || ""
     const interestFilter = useEventFilterStore((s) => s.interestFilter);
 
     const setInterest = useEventFilterStore((s) => s.setInterest);
@@ -27,9 +26,8 @@ export const useDiscoverPage = () => {
 
     // --- Local Search State (Strategy Inputs) ---
     const [tagMode, setTagMode] = useState<FilterTag>(FilterTag.Location);
-    const [location, setLocation] = useState(userCity);
+    const [location, setLocation] = useState<string | null>(userProfile?.city || null);
     
-    // CHANGED: Use DateMapper to ensure local date is used, not UTC
     const [date, setDate] = useState(DateMapper.toISOStringLocal(new Date()));
     
     // --- UI State ---
@@ -39,9 +37,9 @@ export const useDiscoverPage = () => {
 
     const emptyMessage =
        loading ? "Loading..." 
-            : userCity === "" ?
+            : !location ?
               "Fill in your city at your profile or activate your location to see local events 📍"
-              : "No events in " + userCity + " yet  😕"
+              : "No events in " + location + " yet  😕"
 
     // Initial fetch for user profile
     useEffect(() => {
@@ -50,9 +48,11 @@ export const useDiscoverPage = () => {
         }
     }, [userProfile, fetchProfile])
 
-    // Listener for changes at the profile
+    // Update location when profile changes
     useEffect(() => {
-        setLocation(userProfile?.city || "")
+        if (userProfile?.city) {
+            setLocation(userProfile.city);
+        }
     }, [userProfile?.city])
 
     // --- Helpers ---
@@ -69,20 +69,22 @@ export const useDiscoverPage = () => {
         onModeChange: setTagMode,
     });
 
-    // Use Object.values logic we discussed earlier if InterestTag is a String Enum
     const filterButtons = Object.values(InterestTag).map((tag) => ({
         key: tag,
         label: tag.charAt(0).toUpperCase() + tag.slice(1).toLowerCase(),
     }));
 
     /**
-     * Captures current state (Location/Date + Interest Tags) to decide Repository method.
+     * Decides which repository method to use based on current state (Location/Date + Tags).
      */
     const fetchStrategy = useCallback(
         async (repo: EventRepository, page: number) => {
             const tags = interestFilter === InterestTag.ALL ? undefined : [interestFilter];
 
             if (tagMode === FilterTag.Location) {
+                // Return empty if no location is set to prevent errors
+                if (!location) return { events: [], hasMore: false };
+
                 return repo.getEventsByLocation(location, page, tags);
             } else {
                 return repo.getEventsByDateAscending(date, page, tags);
@@ -91,12 +93,14 @@ export const useDiscoverPage = () => {
         [tagMode, location, date, interestFilter]
     );
 
-    // --- Effects ---
-    // Trigger reload on filter change
+    // Trigger reload on filter change (Location, Date, Interest, Mode)
     useEffect(() => {
+        // Reset state (page 1, clear list)
         refreshState();
+        // Load first page with the new strategy
         loadNextPage(fetchStrategy);
-    }, [fetchStrategy, refreshState, loadNextPage]);
+        
+    }, [fetchStrategy]); 
 
     // --- Handlers ---
     const onFilterByInterestTagChanged = (tag: InterestTag) => {
@@ -119,16 +123,18 @@ export const useDiscoverPage = () => {
         setFilterVisible(true);
     };
 
-    const handleRefresh = () => {
-        if (loading) return        
-        refreshState()
-        loadNextPage(fetchStrategy)
+    // Specific Pull-to-refresh logic
+    const handleRefresh = async () => {
+        if (loading) return;
+        
+        refreshState(); // Resets page=1 and events=[]
+        await loadNextPage(fetchStrategy); // Forces immediate load
     }
 
     return {
         // Data
         events,
-        userCity,
+        location,
         loading,
         interestFilter,
         filterButtons,
