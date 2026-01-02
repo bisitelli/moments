@@ -26,7 +26,8 @@ export default function ChatsScreen() {
         isLoading, 
         fetchUserChats, 
         refreshUserChats,
-        hasMore
+        hasMore,
+        unSeenMessagesCount
     } = useUserChatsStore();
 
     // Initialize socket listener for the list
@@ -79,6 +80,10 @@ export default function ChatsScreen() {
         const isMe = item.lastMessage?.senderName === user?.username;
         const lastMessageUsername = isMe ? "You" : item.lastMessage?.senderName;
 
+        // Calculate unseen count
+        const count = unSeenMessagesCount.get(item.id) || 0;
+        const hasUnseen = count > 0;
+
         return (
             <TouchableOpacity style={styles.row} onPress={
                 () => openChat(
@@ -105,9 +110,17 @@ export default function ChatsScreen() {
                     </Text>
                 </View>
                 
-                <Text style={styles.time}>
-                    {formatTime(item.lastMessage?.sentAt)}
-                </Text>
+                {/* Meta column for Time and Badge */}
+                <View style={styles.metaContainer}>
+                    <Text style={[styles.time, hasUnseen && styles.activeTime]}>
+                        {formatTime(item.lastMessage?.sentAt)}
+                    </Text>
+                    {hasUnseen && (
+                        <View style={styles.badge}>
+                            <Text style={styles.badgeText}>{count}</Text>
+                        </View>
+                    )}
+                </View>
             </TouchableOpacity>
         );
     };
@@ -202,6 +215,7 @@ const styles = StyleSheet.create({
     },
     textArea: {
         flex: 1,
+        marginRight: 8, // Avoid overlapping with badge area
     },
     name: {
         fontSize: 16,
@@ -211,10 +225,34 @@ const styles = StyleSheet.create({
         color: "#777",
         marginTop: 2,
     },
+    // Meta container for time and badge alignment
+    metaContainer: {
+        alignItems: "flex-end",
+        justifyContent: "center",
+        minWidth: 50,
+    },
     time: {
         color: "#aaa",
         fontSize: 12,
-        marginLeft: 8,
+        marginBottom: 4, 
+    },
+    activeTime: {
+        color: "#25D366", // WhatsApp green
+        fontWeight: "600",
+    },
+    badge: {
+        backgroundColor: "#25D366", // WhatsApp green
+        borderRadius: 10, // Half of minWidth/height for perfect circle
+        minWidth: 20,
+        height: 20,
+        justifyContent: "center",
+        alignItems: "center",
+        paddingHorizontal: 4,
+    },
+    badgeText: {
+        color: "#fff",
+        fontSize: 10,
+        fontWeight: "bold",
     },
     emptyText: {
         color: "#888",

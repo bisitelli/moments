@@ -100,8 +100,6 @@ export class ApiServiceImpl implements ApiService {
             this.pendingRequests.forEach(({ reject }) => reject(refreshError));
             this.pendingRequests = [];
 
-            // 2. CRITICAL: Update Global State to NOT_AUTHENTICATED
-            // This triggers the UI to switch to Login Screen
             useUserAuthStore.getState().clearUser();
 
             // 3. Return error to the caller
@@ -135,7 +133,7 @@ export class ApiServiceImpl implements ApiService {
     if (!data?.accessToken) throw new Error("Token refresh failed");
 
     await AsyncStorage.setItem(StorageType.ACCESS_TOKEN, data.accessToken);
-    useUserAuthStore.getInitialState().setAccessToken(data.accessToken)
+    useUserAuthStore.getState().setAccessToken(data.accessToken)
 
     if (data.refreshToken) {
       await AsyncStorage.setItem(StorageType.REFRESH_TOKEN, data.refreshToken);

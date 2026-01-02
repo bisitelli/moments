@@ -6,7 +6,6 @@ import { InterestTag } from "@/domain/model/enums/interest_tag";
 const BASE_URL = process.env.EXPO_PUBLIC_API_URL || "http://10.0.2.2:8080/api";
 
 export const processImage = (imageName: string | null | undefined): string | null => {
-  console.log("Received image name:", imageName);
   if (!imageName) return null;
 
   // If it's already a complete URL (e.g. from Google or external), return it

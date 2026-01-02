@@ -20,6 +20,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { format, parseISO, isSameDay, isToday, isYesterday } from 'date-fns';
 import { Ionicons } from '@expo/vector-icons';
 import { processImage } from '@/domain/infrastructure/mappers/user_profile_mapper';
+import { useUserChatsStore } from '@/store/chat/use_user_chats_store';
 
 export default function ConversationScreen() {
     const router = useRouter();
@@ -31,6 +32,9 @@ export default function ConversationScreen() {
     const eventChatImage = processImage(chatImage)
     const eventChatId = Array.isArray(eventId) ? eventId[0] : (eventId); 
     const user = useUserAuthStore((state) => state.user);
+
+    const { resetUnseenMessagesCount } = useUserChatsStore();
+    const { sendLastMessageSeen } = useChatStore();
 
     // Layout Hooks
     const insets = useSafeAreaInsets();
@@ -47,7 +51,20 @@ export default function ConversationScreen() {
     useEffect(() => {
         clearChat();
         fetchHistory(chatId);
+
+        return () => {
+            // Send the last seen message when leaving the chat to the server
+            sendLastMessageSeen(chatId)
+            resetUnseenMessagesCount(chatId);
+        };
     }, [chatId]);
+
+    useEffect(() => {
+        // If messages are loaded (not loading) and there are messages, reset unseen count
+        if (!isLoading && messages.length > 0) {
+            resetUnseenMessagesCount(chatId);
+        }
+    }, [isLoading, messages.length, chatId]);
 
     useEffect(() => {
         if (incomingMessage) addMessage(incomingMessage);
