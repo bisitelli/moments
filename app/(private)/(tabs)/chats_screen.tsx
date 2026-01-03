@@ -27,7 +27,7 @@ export default function ChatsScreen() {
         fetchUserChats, 
         refreshUserChats,
         hasMore,
-        unSeenMessagesCount // This Map updates independently of the 'chats' array
+        unSeenMessagesCount
     } = useUserChatsStore();
 
     // Initialize socket listener for the list
@@ -36,13 +36,9 @@ export default function ChatsScreen() {
     // Reload list logic
     useFocusEffect(
         useCallback(() => {
-            // Initial load (Show Spinner)
             if (chats.length === 0) {
                 fetchUserChats(); 
-            } 
-            // Returning from background or navigating back from a chat
-            // Perform a silent refresh to catch up on any missed WebSocket events
-            else {
+            } else {
                 refreshUserChats(); 
             }
         }, [chats.length]) 
@@ -76,21 +72,22 @@ export default function ChatsScreen() {
     };
 
     const renderItem = ({ item }: { item: UserChatsView }) => {
-        const imageUri = processImage(item.eventImage)
+        const imageUri = processImage(item.eventImage);
         const isMe = item.lastMessage?.senderName === user?.username;
         const lastMessageUsername = isMe ? "You" : item.lastMessage?.senderName;
 
-        // Calculate unseen count
-        // Ensure strictly matching types if needed, but Map usually handles string keys well if set correctly
-        const count = unSeenMessagesCount.get(item.id) || 0;
+        // Check real-time Map first. If undefined, fallback to initial backend data (item).
+        const realtimeCount = unSeenMessagesCount.get(item.id);
+        
+        const count = item.unseenMessagesCount;
         const hasUnseen = count > 0;
 
         return (
             <TouchableOpacity style={styles.row} onPress={
                 () => openChat(
-                    item.id, item.eventName, item.eventId,item.eventImage
+                    item.id, item.eventName, item.eventId, item.eventImage
                 )
-                }>
+            }>
                 {imageUri ? (
                     <Image source={{ uri: imageUri }} style={styles.avatar} />
                 ) : (
@@ -130,12 +127,10 @@ export default function ChatsScreen() {
         <View style={styles.container}>
             <SafeAreaView edges={['top']} style={{ flex: 1 }}>
                 
-                {/* Header / AppBar */}
                 <View style={styles.headerContainer}>
                     <Text style={styles.headerTitle}>Chats</Text>
                 </View>
 
-                {/* Only show full screen loader if we have NO data */}
                 {isLoading && chats.length === 0 ? (
                     <View style={styles.center}>
                         <ActivityIndicator size="large" color="#000" />
@@ -143,15 +138,13 @@ export default function ChatsScreen() {
                 ) : (
                     <FlatList
                         data={chats}
-                        // CRITICAL FIX: extraData ensures the list re-renders when the Map changes
-                        // even if the 'chats' array reference remains the same.
+                        // Ensures list re-renders when map updates
                         extraData={unSeenMessagesCount} 
                         keyExtractor={(item: UserChatsView) => String(item.id)}
                         renderItem={renderItem}
                         contentContainerStyle={{ paddingVertical: 12 }}
                         onEndReached={() => {
-                            if (chats.length === 0) return
-                            // Prevent fetching if already loading or no more data
+                            if (chats.length === 0) return;
                             if (chats.length > 0 && hasMore && !isLoading) {
                                 fetchUserChats();
                             }
@@ -174,7 +167,6 @@ const styles = StyleSheet.create({
         flex: 1,
         backgroundColor: "#fff",
     },
-    // New Header Styles
     headerContainer: {
         paddingHorizontal: 16,
         paddingVertical: 12,
@@ -219,7 +211,7 @@ const styles = StyleSheet.create({
     },
     textArea: {
         flex: 1,
-        marginRight: 8, // Avoid overlapping with badge area
+        marginRight: 8,
     },
     name: {
         fontSize: 16,
@@ -229,7 +221,6 @@ const styles = StyleSheet.create({
         color: "#777",
         marginTop: 2,
     },
-    // Meta container for time and badge alignment
     metaContainer: {
         alignItems: "flex-end",
         justifyContent: "center",
@@ -241,12 +232,12 @@ const styles = StyleSheet.create({
         marginBottom: 4, 
     },
     activeTime: {
-        color: "#25D366", // WhatsApp green
+        color: "#25D366",
         fontWeight: "600",
     },
     badge: {
-        backgroundColor: "#25D366", // WhatsApp green
-        borderRadius: 10, // Half of minWidth/height for perfect circle
+        backgroundColor: "#25D366",
+        borderRadius: 10,
         minWidth: 20,
         height: 20,
         justifyContent: "center",

@@ -57,8 +57,6 @@ export class ChatDatasourceImpl implements ChatDatasource {
             size: this.USER_CHAT_LIST_PAGE_SIZE
         });
 
-        const res =  this.userChatsFromPaginatedResponse(response);
-        console.log("Fetched user chats:", JSON.stringify(res, null, 2));
-        return res
+        return this.userChatsFromPaginatedResponse(response);
     }
 }
